@@ -166,7 +166,8 @@ size_t dorankreduce(problemdata* d, double* R)
 
           EASYDCOPY(d->blksz[k]*d->rank[k], U + base2, R + base1);
 
-          if(RANDOM) srand( (unsigned)time( NULL ) );
+          /* if(RANDOM) srand( (unsigned)time( NULL ) ); */ /* SAM 2023-10-04 */
+          if(RANDOM) srand(925);
           else       srand(925);
 
           tv = 0.0;
