@@ -57,7 +57,7 @@ size_t dorankreduce(problemdata* d, double* R)
       // Do QR factorization of U
       dgeqp3_(&p, &q, U + base + 1, &p, jpvt + 1, tau + 1, work + 1, &lwork, &info);
       if(info != 0) {
-        printf("Error (dorankreduce.c): Problem with QR factorization! (info = %d)\n", info);
+        printf("Error (dorankreduce.c): Problem with QR factorization! (info = %zu)\n", info);
         exit(0);
       }
 

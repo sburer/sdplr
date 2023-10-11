@@ -27,7 +27,7 @@ size_t updatelbfgs2(problemdata *data, lbfgsvec *vecs, double *dir, double *grad
 /* linesearch.c */
 double linesearch(problemdata *data, double *R, double *D, double max, double *funcval, size_t update);
 /* main.c */
-int main(size_t argc, char *argv[]);
+signed main(signed argc, char *argv[]);
 size_t getstorage(size_t m, size_t numblk, size_t *blksz, char *blktype, size_t *CAinfo_entptr, size_t *passedn, size_t *passednr, size_t *maxranks);
 size_t readin(size_t m, size_t numblk, size_t *blksz, char *blktype, double *R, double *lambda, size_t *maxranks, size_t *ranks, double *pieces, FILE *fid);
 size_t writeout(size_t m, size_t numblk, size_t *blksz, char *blktype, double *R, double *lambda, size_t *maxranks, size_t *ranks, double *pieces, FILE *fid);
@@ -39,7 +39,7 @@ size_t printparams(problemdata *data);
 size_t print_dimacs_errors(problemdata *data, double *R);
 size_t printheading(size_t start);
 /* params.c */
-size_t getparams(char *paramfile, size_t *inputtype, double *rho_f, double *rho_c, double *sigmafac, size_t *rankreduce, size_t *timelim, size_t *printlevel, size_t *dthresh_dim, double *dthresh_dens, size_t *numbfgsvecs, double *rankredtol, double *gaptol, ptrdiff_t *checkbd, size_t *typebd);
+size_t getparams(char *paramfile, size_t *inputtype, double *rho_f, double *rho_c, double *sigmafac, size_t *rankreduce, size_t *timelim, size_t *printlevel, size_t *dthresh_dim, double *dthresh_dens, size_t *numbfgsvecs, double *rankredtol, double *gaptol, size_t *checkbd, size_t *typebd);
 size_t getparams_maxlinelength(FILE *datafile);
 size_t getparams_getline(FILE *datafile, char *buffer, size_t bufsiz);
 size_t getparams_tolower(char *buff, size_t buffsz);
@@ -49,19 +49,19 @@ size_t generate_params_info(size_t num);
 /* rankreduce.c */
 size_t dorankreduce(problemdata *d, double *R);
 /* readdata.c */
-size_t readdata_sdpa(char *datafilename, size_t *passed_m, size_t *passed_numblk, ptrdiff_t **passed_blksz, char **passed_blktype, double **passed_b, double **passed_CAent, size_t **passed_CArow, size_t **passed_CAcol, size_t **passed_CAinfo_entptr, size_t **passed_CAinfo_rowcolptr, char **passed_CAinfo_type, char **passed_CAinfo_storage);
+size_t readdata_sdpa(char *datafilename, size_t *passed_m, size_t *passed_numblk, size_t **passed_blksz, char **passed_blktype, double **passed_b, double **passed_CAent, size_t **passed_CArow, size_t **passed_CAcol, size_t **passed_CAinfo_entptr, size_t **passed_CAinfo_rowcolptr, char **passed_CAinfo_type, char **passed_CAinfo_storage);
 size_t quicksort5(size_t *A1, size_t *A2, size_t *A3, size_t *A4, double *A5, size_t p, size_t r);
 size_t partition5(size_t *A1, size_t *A2, size_t *A3, size_t *A4, double *A5, size_t p, size_t r);
 void skip_to_end_of_line(FILE *datafile);
 size_t get_line(FILE *datafile, char *buffer, size_t bufsiz);
 size_t max_line_length(FILE *datafile);
-size_t readdata_sdplr(char *datafilename, size_t *passed_m, size_t *passed_numblk, ptrdiff_t **passed_blksz, char **passed_blktype, double **passed_b, double **passed_CAent, size_t **passed_CArow, size_t **passed_CAcol, size_t **passed_CAinfo_entptr, size_t **passed_CAinfo_rowcolptr, char **passed_CAinfo_type, char **passed_CAinfo_storage);
-size_t readdata_raw(char *datafilename, size_t *passed_m, size_t *passed_numblk, ptrdiff_t **passed_blksz, char **passed_blktype, double **passed_b, double **passed_CAent, size_t **passed_CArow, size_t **passed_CAcol, size_t **passed_CAinfo_entptr, size_t **passed_CAinfo_rowcolptr, char **passed_CAinfo_type, char **passed_CAinfo_storage);
-size_t writedata_raw(char *datafilename, size_t m, size_t numblk, ptrdiff_t *blksz, char *blktype, double *b, double *CAent, size_t *CArow, size_t *CAcol, size_t *CAinfo_entptr, size_t *CAinfo_rowcolptr, char *CAinfo_type, char *CAinfo_storage);
-size_t writedata_sdplr(char *datafilename, size_t m, size_t numblk, ptrdiff_t *blksz, char *blktype, double *b, double *CAent, size_t *CArow, size_t *CAcol, size_t *CAinfo_entptr, char *CAinfo_type);
-size_t writedata_sdpa(char *datafilename, size_t m, size_t numblk, ptrdiff_t *blksz, char *blktype, double *b, double *CAent, size_t *CArow, size_t *CAcol, size_t *CAinfo_entptr, char *CAinfo_type);
+size_t readdata_sdplr(char *datafilename, size_t *passed_m, size_t *passed_numblk, size_t **passed_blksz, char **passed_blktype, double **passed_b, double **passed_CAent, size_t **passed_CArow, size_t **passed_CAcol, size_t **passed_CAinfo_entptr, size_t **passed_CAinfo_rowcolptr, char **passed_CAinfo_type, char **passed_CAinfo_storage);
+size_t readdata_raw(char *datafilename, size_t *passed_m, size_t *passed_numblk, size_t **passed_blksz, char **passed_blktype, double **passed_b, double **passed_CAent, size_t **passed_CArow, size_t **passed_CAcol, size_t **passed_CAinfo_entptr, size_t **passed_CAinfo_rowcolptr, char **passed_CAinfo_type, char **passed_CAinfo_storage);
+size_t writedata_raw(char *datafilename, size_t m, size_t numblk, size_t *blksz, char *blktype, double *b, double *CAent, size_t *CArow, size_t *CAcol, size_t *CAinfo_entptr, size_t *CAinfo_rowcolptr, char *CAinfo_type, char *CAinfo_storage);
+size_t writedata_sdplr(char *datafilename, size_t m, size_t numblk, size_t *blksz, char *blktype, double *b, double *CAent, size_t *CArow, size_t *CAcol, size_t *CAinfo_entptr, char *CAinfo_type);
+size_t writedata_sdpa(char *datafilename, size_t m, size_t numblk, size_t *blksz, char *blktype, double *b, double *CAent, size_t *CArow, size_t *CAcol, size_t *CAinfo_entptr, char *CAinfo_type);
 /* sdplrlib.c */
-size_t sdplrlib(size_t m, size_t numblk, ptrdiff_t *blksz, char *blktype, double *b, double *CAent, size_t *CArow, size_t *CAcol, size_t *CAinfo_entptr, char *CAinfo_type, size_t numbfgsvecs, double rho_f, double rho_c, double sigmafac, size_t rankreduce, double gaptol, ptrdiff_t checkbd, size_t typebd, size_t dthresh_dim, double dthresh_dens, size_t timelim, double rankredtol, size_t printlevel, double *R, double *lambda, size_t *maxranks, size_t *ranks, double *pieces);
+size_t sdplrlib(size_t m, size_t numblk, size_t *blksz, char *blktype, double *b, double *CAent, size_t *CArow, size_t *CAcol, size_t *CAinfo_entptr, char *CAinfo_type, size_t numbfgsvecs, double rho_f, double rho_c, double sigmafac, size_t rankreduce, double gaptol, size_t checkbd, size_t typebd, size_t dthresh_dim, double dthresh_dens, size_t timelim, double rankredtol, size_t printlevel, double *R, double *lambda, size_t *maxranks, size_t *ranks, double *pieces);
 void myprint(size_t majiter, size_t iter, double val, double rho_f_val, size_t CG, double totaltime);
 size_t do_scaling(problemdata *data, double value, double *norm);
 /* timefuncs.c */

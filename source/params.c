@@ -45,7 +45,7 @@ double* dthresh_dens,
 size_t*    numbfgsvecs,
 double* rankredtol,
 double* gaptol,
-ptrdiff_t*    checkbd,
+size_t*    checkbd,
 size_t*    typebd)
 {
   size_t i, buffsz, ret, numparams=NUMPARAMS;
@@ -160,7 +160,7 @@ size_t*    typebd)
     *numbfgsvecs  = (size_t)values[9];
     *rankredtol   =      values[10];
     *gaptol       =      values[11];
-    *checkbd      = (ptrdiff_t)values[12];
+    *checkbd      = (size_t)values[12];
     *typebd       = (size_t)values[13];
 
     // Perform some simple checks
@@ -338,7 +338,7 @@ size_t generate_params(void)
   size_t     numbfgsvecs;
   double  rankredtol;
   double  gaptol;
-  ptrdiff_t     checkbd;
+  size_t     checkbd;
   size_t     typebd;
   */
 

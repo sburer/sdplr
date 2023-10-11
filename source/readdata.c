@@ -16,9 +16,9 @@ void skip_to_end_of_line(FILE*);
 size_t get_line(FILE*, char*, size_t);
 size_t max_line_length(FILE*);
 
-extern void dsyev_();
+/* extern void dsyev_(); */
 
-size_t readdata_sdpa(char* datafilename, size_t* passed_m, size_t* passed_numblk, ptrdiff_t** passed_blksz,
+size_t readdata_sdpa(char* datafilename, size_t* passed_m, size_t* passed_numblk, size_t** passed_blksz,
                   char** passed_blktype, double** passed_b, double** passed_CAent,
                   size_t** passed_CArow, size_t** passed_CAcol, size_t** passed_CAinfo_entptr,
                   size_t** passed_CAinfo_rowcolptr, char** passed_CAinfo_type,
@@ -39,7 +39,8 @@ size_t readdata_sdpa(char* datafilename, size_t* passed_m, size_t* passed_numblk
   int flag;
 
   int m, numblk;
-  ptrdiff_t *blksz;
+  size_t *blksz;
+  int *tmp_blksz;
   char   *blktype;
   double *b, *CAent;
   size_t    *CArow, *CAcol, *CAinfo_entptr, *CAinfo_rowcolptr;
@@ -90,16 +91,17 @@ size_t readdata_sdpa(char* datafilename, size_t* passed_m, size_t* passed_numblk
   // Get m
 
   ret = get_line(datafile, buf, buflen);
-  sscanf(buf, "%d", &m);
+  sscanf(buf, "%u", &m);
 
   // Get numblk
 
   ret = get_line(datafile, buf, buflen);
-  sscanf(buf, "%d", &numblk);
+  sscanf(buf, "%u", &numblk);
 
   // Prepare to get blksz and blktype
  
-  MYCALLOC(blksz, ptrdiff_t, numblk);
+  MYCALLOC(blksz, size_t, numblk);
+  MYCALLOC(tmp_blksz, int, numblk);
   MYCALLOC(blktype, char, numblk);
 
   // Get blksz
@@ -107,7 +109,7 @@ size_t readdata_sdpa(char* datafilename, size_t* passed_m, size_t* passed_numblk
   ret = get_line(datafile, buf, buflen);
   ptr1 = buf;
 	for(i = 0; i < numblk; i++) {
-		blksz[i] = strtol(ptr1, &ptr2, 10);
+		tmp_blksz[i] = strtol(ptr1, &ptr2, 10);
 	  ptr1 = ptr2;
   }
 
@@ -117,11 +119,14 @@ size_t readdata_sdpa(char* datafilename, size_t* passed_m, size_t* passed_numblk
   // a negative block size.
 
   for(i = 0; i < numblk; i++) {
-    if(blksz[i] < 0) {
+    if(tmp_blksz[i] < 0) {
       blktype[i] = 'd';
-      blksz[i] = -blksz[i];
+      blksz[i] = -tmp_blksz[i];
     }
-    else blktype[i] = 's';
+    else {
+      blktype[i] = 's';
+      blksz[i] = tmp_blksz[i];
+    }
   }
 
   // Prepare to get b
@@ -140,10 +145,10 @@ size_t readdata_sdpa(char* datafilename, size_t* passed_m, size_t* passed_numblk
   // Count number of remaining lines
 
   sam_nnz = 0;
-  ret = fscanf(datafile, "%d %d %d %d %le", &num, &blk, &pos1, &pos2, &entry);
+  ret = fscanf(datafile, "%u %u %u %u %le", &num, &blk, &pos1, &pos2, &entry);
   do {
     sam_nnz++;
-    ret = fscanf(datafile, "%d %d %d %d %le", &num, &blk, &pos1, &pos2, &entry);
+    ret = fscanf(datafile, "%u %u %u %u %le", &num, &blk, &pos1, &pos2, &entry);
   } while(ret == 5);
   fclose(datafile);
 
@@ -169,7 +174,7 @@ size_t readdata_sdpa(char* datafilename, size_t* passed_m, size_t* passed_numblk
 
   flag = 0;
   for(ct = 1; ct <= sam_nnz; ct++) {
-    ret = fscanf(datafile, "%d %d %d %d %le", &num, &blk, &pos1, &pos2, &entry);
+    ret = fscanf(datafile, "%u %u %u %u %le", &num, &blk, &pos1, &pos2, &entry);
     if(pos1 == 0 || pos2 == 0) {
       printf("Error (readdata_sdpa): Encountered '0' row or column index.\n");
       exit(0);
@@ -481,7 +486,7 @@ size_t max_line_length(FILE *datafile)
 
 
 
-size_t readdata_sdplr(char* datafilename, size_t* passed_m, size_t* passed_numblk, ptrdiff_t** passed_blksz,
+size_t readdata_sdplr(char* datafilename, size_t* passed_m, size_t* passed_numblk, size_t** passed_blksz,
                    char** passed_blktype, double** passed_b, double** passed_CAent,
                    size_t** passed_CArow, size_t** passed_CAcol, size_t** passed_CAinfo_entptr,
                    size_t** passed_CAinfo_rowcolptr, char** passed_CAinfo_type,
@@ -491,14 +496,14 @@ size_t readdata_sdplr(char* datafilename, size_t* passed_m, size_t* passed_numbl
   // and no error checking is done at all.
 
   size_t i, j, k, pos1, pos2, num, blk, sz;
-  ptrdiff_t *nnz;
+  size_t *nnz;
   size_t ct, specindex;
   double entry;
   char type;
   FILE *datafile;
 
   int    m, numblk;
-  ptrdiff_t *blksz;
+  size_t *blksz;
   size_t    ret;
   char   *blktype;
   double *b, *CAent;
@@ -517,20 +522,20 @@ size_t readdata_sdplr(char* datafilename, size_t* passed_m, size_t* passed_numbl
   }
 
   // Read m
-  ret = fscanf(datafile, "%d", &m);
+  ret = fscanf(datafile, "%u", &m);
 
   // Read numblk
-  ret = fscanf(datafile, "%d", &numblk);
+  ret = fscanf(datafile, "%u", &numblk);
 
   //if(numblk != 1) { printf("SDPLR data file has more than one block!\n"); exit(0); }
 
   // Setup blksz and blktype
-  MYCALLOC(blksz, ptrdiff_t, numblk);
+  MYCALLOC(blksz, size_t, numblk);
   MYCALLOC(blktype, char, numblk);
 
   // Read block size and set blktype
   for(blk = 0; blk < numblk; blk++) {
-    ret = fscanf(datafile, "%d", &(blksz[blk]));
+    ret = fscanf(datafile, "%zu", &(blksz[blk]));
     if(blksz[blk] > 0) blktype[blk] = 's';
     else if(blksz[blk] < 0) {
       blksz[blk] *= -1;
@@ -552,13 +557,13 @@ size_t readdata_sdplr(char* datafilename, size_t* passed_m, size_t* passed_numbl
   ret = fscanf(datafile, "%lf", &entry);
 
   // Prepare for next step  
-  MYCALLOC(nnz, ptrdiff_t, (m+1)*numblk);
+  MYCALLOC(nnz, size_t, (m+1)*numblk);
 
   // Determine how many nnz entries are in each (data matrix)-(block) pair
   // This needs work!
   for(i = 0; i <= m; i++) { 
     for(k = 0; k < numblk; k++) {
-      ret = fscanf(datafile, "%d %d %c %d\n", &num, &blk, &type, &sz);
+      ret = fscanf(datafile, "%zu %zu %c %zu\n", &num, &blk, &type, &sz);
       if(ret < 4) {
         printf("error with fscanf!\n");
         exit(0);
@@ -566,7 +571,7 @@ size_t readdata_sdplr(char* datafilename, size_t* passed_m, size_t* passed_numbl
       if(type == 's') {
         nnz[ DATABLOCKIND(num,blk,numblk) ] = 0;
         for(j = 1; j <= sz; j++) {
-          ret = fscanf(datafile, "%d %d %lf", &pos1, &pos2, &entry);
+          ret = fscanf(datafile, "%zu %zu %lf", &pos1, &pos2, &entry);
           if(fabs(entry) > DBL_EPSILON) nnz[ DATABLOCKIND(num,blk,numblk) ]++;
         }
       }
@@ -633,10 +638,10 @@ size_t readdata_sdplr(char* datafilename, size_t* passed_m, size_t* passed_numbl
   datafile = fopen(datafilename, "r");
 
   // Redo first lines in file
-  ret = fscanf(datafile, "%d", &m);
-  ret = fscanf(datafile, "%d", &numblk);
+  ret = fscanf(datafile, "%u", &m);
+  ret = fscanf(datafile, "%u", &numblk);
   for(blk = 0; blk < numblk; blk++) {
-    ret = fscanf(datafile, "%d", &(blksz[blk])); 
+    ret = fscanf(datafile, "%zu", &(blksz[blk])); 
     if(blksz[blk] < 0) blksz[blk] *= -1;
   }
   for(i = 0; i < m; i++) ret = fscanf(datafile, "%lf", &(b[i]));
@@ -646,11 +651,11 @@ size_t readdata_sdplr(char* datafilename, size_t* passed_m, size_t* passed_numbl
   // This needs work.
   for(i = 0; i <= m; i++) {
     for(k = 0; k < numblk; k++) {
-      ret = fscanf(datafile, "%d %d %c %d", &num, &blk, &type, &sz);
+      ret = fscanf(datafile, "%zu %zu %c %zu", &num, &blk, &type, &sz);
       ct = CAinfo_entptr[DATABLOCKIND(i,blk,numblk)];
       if(type == 's') {
         for(j = 1; j <= sz; j++) {
-          ret = fscanf(datafile, "%d %d %lf", &pos1, &pos2, &entry);
+          ret = fscanf(datafile, "%zu %zu %lf", &pos1, &pos2, &entry);
           if(fabs(entry) > DBL_EPSILON) {
             if(pos1 == 0 || pos2 == 0) { printf("Error (readdata_sdplr): Encountered '0' row or column index.\n"); exit(0); }
             if(pos1 > pos2) { CArow[ct] = pos1; CAcol[ct] = pos2; }
@@ -717,7 +722,7 @@ size_t readdata_sdplr(char* datafilename, size_t* passed_m, size_t* passed_numbl
 }
 
 
-size_t readdata_raw(char* datafilename, size_t* passed_m, size_t* passed_numblk, ptrdiff_t** passed_blksz,
+size_t readdata_raw(char* datafilename, size_t* passed_m, size_t* passed_numblk, size_t** passed_blksz,
                 char** passed_blktype, double** passed_b, double** passed_CAent,
                 size_t** passed_CArow, size_t** passed_CAcol, size_t** passed_CAinfo_entptr,
                 size_t** passed_CAinfo_rowcolptr, char** passed_CAinfo_type,
@@ -728,7 +733,7 @@ size_t readdata_raw(char* datafilename, size_t* passed_m, size_t* passed_numblk,
   FILE *fid;
 
   size_t    m, numblk;
-  ptrdiff_t *blksz;
+  size_t *blksz;
   char   *blktype;
   double *b, *CAent;
   size_t    *CArow, *CAcol, *CAinfo_entptr, *CAinfo_rowcolptr;
@@ -740,16 +745,16 @@ size_t readdata_raw(char* datafilename, size_t* passed_m, size_t* passed_numblk,
     exit(0);
   }
 
-  ret = fscanf(fid, "%d\n", &m);
+  ret = fscanf(fid, "%zu\n", &m);
 
-  ret = fscanf(fid, "%d\n", &numblk);
+  ret = fscanf(fid, "%zu\n", &numblk);
 
-  MYCALLOC(blksz, ptrdiff_t, numblk);
+  MYCALLOC(blksz, size_t, numblk);
   MYCALLOC(blktype, char, numblk);
   MYCALLOC(b, double, m);
 
   for(k = 1; k <= numblk; k++)
-    ret = fscanf(fid, "%d %c\n", &(blksz[k-1]), &(blktype[k-1]));
+    ret = fscanf(fid, "%zu %c\n", &(blksz[k-1]), &(blktype[k-1]));
 
   for(i = 1; i <= m; i++)
     ret = fscanf(fid, "%lf\n", &(b[i-1]));
@@ -760,16 +765,16 @@ size_t readdata_raw(char* datafilename, size_t* passed_m, size_t* passed_numblk,
   MYCALLOC(CAinfo_storage, char, (m+1)*numblk);
 
   for(h = 0; h < (m+1)*numblk; h++)
-    ret = fscanf(fid, "%d %d %c %c\n", &(CAinfo_entptr[h]), &(CAinfo_rowcolptr[h]), &(CAinfo_type[h]), &(CAinfo_storage[h]));
+    ret = fscanf(fid, "%zu %zu %c %c\n", &(CAinfo_entptr[h]), &(CAinfo_rowcolptr[h]), &(CAinfo_type[h]), &(CAinfo_storage[h]));
   
-  ret = fscanf(fid, "%d %d\n", &(CAinfo_rowcolptr[(m+1)*numblk]), &(CAinfo_entptr[(m+1)*numblk]));
+  ret = fscanf(fid, "%zu %zu\n", &(CAinfo_rowcolptr[(m+1)*numblk]), &(CAinfo_entptr[(m+1)*numblk]));
 
   MYCALLOC(CArow, size_t, CAinfo_rowcolptr[(m+1)*numblk]);
   MYCALLOC(CAcol, size_t, CAinfo_rowcolptr[(m+1)*numblk]);
   MYCALLOC(CAent, double, CAinfo_entptr[(m+1)*numblk]);
 
   for(h = 0; h < CAinfo_rowcolptr[(m+1)*numblk]; h++)
-    ret = fscanf(fid, "%d %d\n", &(CArow[h]), &(CAcol[h]));
+    ret = fscanf(fid, "%zu %zu\n", &(CArow[h]), &(CAcol[h]));
 
   for(h = 0; h < CAinfo_entptr[(m+1)*numblk]; h++)
     ret = fscanf(fid, "%lf\n", &(CAent[h]));
@@ -794,7 +799,7 @@ size_t readdata_raw(char* datafilename, size_t* passed_m, size_t* passed_numblk,
 }
 
 
-size_t writedata_raw(char* datafilename, size_t m, size_t numblk, ptrdiff_t* blksz,
+size_t writedata_raw(char* datafilename, size_t m, size_t numblk, size_t* blksz,
                   char* blktype, double* b, double* CAent,
                   size_t* CArow, size_t* CAcol, size_t* CAinfo_entptr,
                   size_t* CAinfo_rowcolptr, char* CAinfo_type,
@@ -809,23 +814,23 @@ size_t writedata_raw(char* datafilename, size_t m, size_t numblk, ptrdiff_t* blk
     return 0;
   }
 
-  fprintf(fid, "%d\n", m);
+  fprintf(fid, "%zu\n", m);
 
-  fprintf(fid, "%d\n", numblk);
+  fprintf(fid, "%zu\n", numblk);
 
   for(k = 1; k <= numblk; k++)
-    fprintf(fid, "%d %c\n", blksz[k-1], blktype[k-1]);
+    fprintf(fid, "%zu %c\n", blksz[k-1], blktype[k-1]);
 
   for(i = 1; i <= m; i++)
     fprintf(fid, "%.16e\n", b[i-1]);
 
   for(h = 0; h < (m+1)*numblk; h++)
-    fprintf(fid, "%d %d %c %c\n", CAinfo_entptr[h], CAinfo_rowcolptr[h], CAinfo_type[h], CAinfo_storage[h]);
+    fprintf(fid, "%zu %zu %c %c\n", CAinfo_entptr[h], CAinfo_rowcolptr[h], CAinfo_type[h], CAinfo_storage[h]);
   
-  fprintf(fid, "%d %d\n", CAinfo_rowcolptr[(m+1)*numblk], CAinfo_entptr[(m+1)*numblk]);
+  fprintf(fid, "%zu %zu\n", CAinfo_rowcolptr[(m+1)*numblk], CAinfo_entptr[(m+1)*numblk]);
 
   for(h = 0; h < CAinfo_rowcolptr[(m+1)*numblk]; h++)
-    fprintf(fid, "%d %d\n", CArow[h], CAcol[h]);
+    fprintf(fid, "%zu %zu\n", CArow[h], CAcol[h]);
 
   for(h = 0; h < CAinfo_entptr[(m+1)*numblk]; h++)
     fprintf(fid, "%.16e\n", CAent[h]);
@@ -835,7 +840,7 @@ size_t writedata_raw(char* datafilename, size_t m, size_t numblk, ptrdiff_t* blk
   return 0;
 }
 
-size_t writedata_sdplr(char* datafilename, size_t m, size_t numblk, ptrdiff_t* blksz,
+size_t writedata_sdplr(char* datafilename, size_t m, size_t numblk, size_t* blksz,
                     char* blktype, double* b, double* CAent,
                     size_t* CArow, size_t* CAcol, size_t* CAinfo_entptr,
                     char* CAinfo_type)
@@ -870,13 +875,13 @@ size_t writedata_sdplr(char* datafilename, size_t m, size_t numblk, ptrdiff_t* b
     return 0;
   }
 
-  fprintf(fid, "%d\n", m);
+  fprintf(fid, "%zu\n", m);
 
-  fprintf(fid, "%d\n", numblk);
+  fprintf(fid, "%zu\n", numblk);
 
   for(k = 1; k <= numblk; k++) {
-    if(blktype[k-1] == 's') fprintf(fid, "%d\n", blksz[k-1]);
-    else if(blktype[k-1] == 'd') fprintf(fid, "%d\n", -blksz[k-1]);
+    if(blktype[k-1] == 's') fprintf(fid, "%zu\n", blksz[k-1]);
+    else if(blktype[k-1] == 'd') fprintf(fid, "%zu\n", -blksz[k-1]);
 
   }
 
@@ -909,14 +914,14 @@ size_t writedata_sdplr(char* datafilename, size_t m, size_t numblk, ptrdiff_t* b
             for(j = 0; j < sz; j++) if(fabs(w[j]) - maxeval > DBL_EPSILON) maxeval = fabs(w[j]);
             rank = 0;
             for(j = 0; j < sz; j++) if(fabs(w[j])/maxeval > DBL_EPSILON) rank++;
-            printf("(h,k) = (%d,%d) : rank %d\n", h, k, rank);
+            printf("(h,k) = (%zu,%zu) : rank %zu\n", h, k, rank);
           }
-//           else printf("h = %d : eval computation bad\n", h);
+//           else printf("h = %zu : eval computation bad\n", h);
 
         }
 
         if(rank <= sz/10 && (double)2*nnz/(sz*(sz+1)) - 0.75 > DBL_EPSILON) {
-          fprintf(fid, "%d %d l %d\n", h, k, rank);
+          fprintf(fid, "%zu %zu l %zu\n", h, k, rank);
           for(j = 0; j < sz; j++) if(fabs(w[j]/maxeval) > DBL_EPSILON)
             fprintf(fid, "%.15e\n", w[j]);
           for(j = 0; j < sz; j++) if(fabs(w[j]/maxeval) > DBL_EPSILON)
@@ -928,9 +933,9 @@ size_t writedata_sdplr(char* datafilename, size_t m, size_t numblk, ptrdiff_t* b
         
           // Right now, this matrix is assumed sparse
           j = CAinfo_entptr[ DATABLOCKIND(h,k,numblk) + 1 ] - CAinfo_entptr[ DATABLOCKIND(h,k,numblk) ];
-          fprintf(fid, "%d %d s %d\n", h, k, j);
+          fprintf(fid, "%zu %zu s %zu\n", h, k, j);
           for(j = CAinfo_entptr[ DATABLOCKIND(h,k,numblk) ]; j <= CAinfo_entptr[ DATABLOCKIND(h,k,numblk) + 1 ] - 1; j++)
-            fprintf(fid, "%d %d %.16e\n", CArow[j], CAcol[j], CAent[j]);
+            fprintf(fid, "%zu %zu %.16e\n", CArow[j], CAcol[j], CAent[j]);
 
         }
 
@@ -939,7 +944,7 @@ size_t writedata_sdplr(char* datafilename, size_t m, size_t numblk, ptrdiff_t* b
       {
         // Right now, this matrix is assumed dense
         j = (CAinfo_entptr[ DATABLOCKIND(h,k,numblk) + 1 ] - CAinfo_entptr[ DATABLOCKIND(h,k,numblk) ])/(blksz[k-1]+1);
-        fprintf(fid, "%d %d l %d\n", h, k, j);
+        fprintf(fid, "%zu %zu l %zu\n", h, k, j);
         for(j = CAinfo_entptr[ DATABLOCKIND(h,k,numblk) ]; j <= CAinfo_entptr[ DATABLOCKIND(h,k,numblk) + 1 ] - 1; j++)
           fprintf(fid, "%.16e\n", CAent[j]);
       }
@@ -947,9 +952,9 @@ size_t writedata_sdplr(char* datafilename, size_t m, size_t numblk, ptrdiff_t* b
       {
         // Right now this matrix is assumed sparse
         j = CAinfo_entptr[ DATABLOCKIND(h,k,numblk) + 1 ] - CAinfo_entptr[ DATABLOCKIND(h,k,numblk) ];
-        fprintf(fid, "%d %d s %d\n", h, k, j);
+        fprintf(fid, "%zu %zu s %zu\n", h, k, j);
         for(j = CAinfo_entptr[ DATABLOCKIND(h,k,numblk) ]; j <= CAinfo_entptr[ DATABLOCKIND(h,k,numblk) + 1 ] - 1; j++)
-          fprintf(fid, "%d %d %.16e\n", CArow[j], CAcol[j], CAent[j]);
+          fprintf(fid, "%zu %zu %.16e\n", CArow[j], CAcol[j], CAent[j]);
       }
       else {
         printf("Error (writedata_sdplr): Encountered data matrix not of type 's' or 'l' or 'd'.\n");
@@ -969,7 +974,7 @@ size_t writedata_sdplr(char* datafilename, size_t m, size_t numblk, ptrdiff_t* b
 
 }
 
-size_t writedata_sdpa(char* datafilename, size_t m, size_t numblk, ptrdiff_t* blksz,
+size_t writedata_sdpa(char* datafilename, size_t m, size_t numblk, size_t* blksz,
                    char* blktype, double* b, double* CAent,
                    size_t* CArow, size_t* CAcol, size_t* CAinfo_entptr,
                    char* CAinfo_type)
@@ -986,13 +991,13 @@ size_t writedata_sdpa(char* datafilename, size_t m, size_t numblk, ptrdiff_t* bl
     return 0;
   }
 
-  fprintf(fid, "%d\n", m);
+  fprintf(fid, "%zu\n", m);
 
-  fprintf(fid, "%d\n", numblk);
+  fprintf(fid, "%zu\n", numblk);
 
   for(k = 1; k <= numblk; k++) {
-    if(blktype[k-1] == 's') fprintf(fid, "%d ", blksz[k-1]);
-    else if(blktype[k-1] == 'd') fprintf(fid, "%d ", -blksz[k-1]);
+    if(blktype[k-1] == 's') fprintf(fid, "%zu ", blksz[k-1]);
+    else if(blktype[k-1] == 'd') fprintf(fid, "%zu ", -blksz[k-1]);
   }
   fprintf(fid, "\n");
 
@@ -1010,8 +1015,8 @@ size_t writedata_sdpa(char* datafilename, size_t m, size_t numblk, ptrdiff_t* bl
       {
         // Right now, this matrix is assumed sparse
         for(j = CAinfo_entptr[tmp]; (int)j <= (int)CAinfo_entptr[tmp+1] - 1; j++) {
-          if(h == 0) fprintf(fid, "%d %d %d %d %.16e\n", h, k, CArow[j], CAcol[j], -CAent[j]);
-          else       fprintf(fid, "%d %d %d %d %.16e\n", h, k, CArow[j], CAcol[j],  CAent[j]);
+          if(h == 0) fprintf(fid, "%zu %zu %zu %zu %.16e\n", h, k, CArow[j], CAcol[j], -CAent[j]);
+          else       fprintf(fid, "%zu %zu %zu %zu %.16e\n", h, k, CArow[j], CAcol[j],  CAent[j]);
         }
       }
       else if(CAinfo_type[tmp] == 'l')
@@ -1023,8 +1028,8 @@ size_t writedata_sdpa(char* datafilename, size_t m, size_t numblk, ptrdiff_t* bl
       {
         // Right now this matrix is assumed sparse
         for(j = CAinfo_entptr[tmp]; (int)j <= (int)CAinfo_entptr[tmp+1] - 1; j++)
-          if(h == 0) fprintf(fid, "%d %d %d %d %.16e\n", h, k, CArow[j], CAcol[j], -CAent[j]);
-          else fprintf(fid, "%d %d %d %d %.16e\n", h, k, CArow[j], CAcol[j], CAent[j]);
+          if(h == 0) fprintf(fid, "%zu %zu %zu %zu %.16e\n", h, k, CArow[j], CAcol[j], -CAent[j]);
+          else fprintf(fid, "%zu %zu %zu %zu %.16e\n", h, k, CArow[j], CAcol[j], CAent[j]);
       }
       else {
         printf("Error (writedata_sdplr): Encountered data matrix not of type 's' or 'l' or 'd'.\n");

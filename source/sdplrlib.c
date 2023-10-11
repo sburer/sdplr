@@ -28,10 +28,10 @@
 void myprint(size_t majiter, size_t iter, double val, double rho_f_val, size_t CG, double totaltime);
 size_t do_scaling(problemdata *data, double value, double *norm);
 
-size_t sdplrlib (size_t m, size_t numblk, ptrdiff_t *blksz, char *blktype, double *b,
+size_t sdplrlib (size_t m, size_t numblk, size_t *blksz, char *blktype, double *b,
               double *CAent, size_t *CArow, size_t *CAcol, size_t *CAinfo_entptr,
               char *CAinfo_type, size_t numbfgsvecs, double rho_f, double
-              rho_c, double sigmafac, size_t rankreduce, double gaptol, ptrdiff_t
+              rho_c, double sigmafac, size_t rankreduce, double gaptol, size_t
               checkbd, size_t typebd, size_t dthresh_dim, double dthresh_dens,
               size_t timelim, double rankredtol, size_t printlevel, double *R,
               double *lambda, size_t* maxranks, size_t *ranks, double *pieces)
@@ -293,7 +293,7 @@ size_t sdplrlib (size_t m, size_t numblk, ptrdiff_t *blksz, char *blktype, doubl
 
     if(data->printlevel > 0) {
       if (data->checkbd == 1) {
-        sprintf (line, "%3d %6d % .7e %.1e % .7e %5d    [ %5d  %5d ]\n", majiter, iter, val, rho_f_val, bestbd, (size_t) data->totaltime, curr_CG, CG);
+        sprintf (line, "%3zu %6zu % .7e %.1e % .7e %5zu    [ %5zu  %5zu ]\n", majiter, iter, val, rho_f_val, bestbd, (size_t) data->totaltime, curr_CG, CG);
         printf ("%s",line); fflush (stdout);
       }
       if (data->checkbd == 0 || data->checkbd == -1) myprint(majiter, iter, overallsc*val, rho_f_val, CG, data->totaltime);
@@ -383,11 +383,11 @@ void myprint(size_t majiter, size_t iter, double val, double rho_f_val, size_t C
 {
   char line[1000];
 #ifndef __MEX
-  if(majiter < 0) sprintf(line, "       %7d  % .8e  %.1e  %6d",          iter, val, rho_f_val, (size_t)totaltime);
-  else            sprintf(line, "  %3d  %7d  % .8e  %.1e  %6d", majiter, iter, val, rho_f_val, (size_t)totaltime);
+  if(majiter < 0) sprintf(line, "       %7zu  % .8e  %.1e  %6zu",          iter, val, rho_f_val, (size_t)totaltime);
+  else            sprintf(line, "  %3zu  %7zu  % .8e  %.1e  %6zu", majiter, iter, val, rho_f_val, (size_t)totaltime);
 #else
-  if(majiter < 0) sprintf(line, "       %7d  % .8e  %.1e",          iter, val, rho_f_val);
-  else            sprintf(line, "  %3d  %7d  % .8e  %.1e", majiter, iter, val, rho_f_val);
+  if(majiter < 0) sprintf(line, "       %7zu  % .8e  %.1e",          iter, val, rho_f_val);
+  else            sprintf(line, "  %3zu  %7zu  % .8e  %.1e", majiter, iter, val, rho_f_val);
 #endif
   printf("%s",line);
   printf("\n");

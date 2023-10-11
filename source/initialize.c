@@ -306,7 +306,7 @@ size_t initialize (problemdata * data, size_t * maxranks)
       for (i = 1; i <= data->m; i++) if (data->A[i][k]->type == 'l') { data->lr_mat[++ct] = i; data->lr_blk[ct] = k; }
     }
 
-  if(ct != data->lr_num) { printf("Problem getting lowrank matrices. (%d != %d)\n", ct, data->lr_num); exit(0); }
+  if(ct != data->lr_num) { printf("Problem getting lowrank matrices. (%zu != %zu)\n", ct, data->lr_num); exit(0); }
 
   // END: Setup new data structures
   // END: Setup new data structures

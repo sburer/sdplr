@@ -14,7 +14,7 @@ signed main(signed argc, char *argv[])
   FILE *fid;
 
   size_t m, numblk;
-  ptrdiff_t *blksz;
+  size_t *blksz;
   char *blktype;
   double *b, *CAent;
   size_t *CArow, *CAcol, *CAinfo_entptr, *CAinfo_rowcolptr;
@@ -106,7 +106,7 @@ signed main(signed argc, char *argv[])
 
   for(k = 0; k < numblk; k++)
     if(blksz[k] == 0) {
-      printf("Error (main): Block %d has size 0.\n", k);
+      printf("Error (main): Block %zu has size 0.\n", k);
       exit(0);
     }
 
@@ -235,7 +235,7 @@ size_t readin(size_t m, size_t numblk, size_t* blksz, char* blktype, double* R, 
   size_t ret;
   char tc1;
 
-  ret = fscanf(fid, "dual variable %d\n", &ti1);
+  ret = fscanf(fid, "dual variable %zd\n", &ti1);
 
   if(ti1 != m) {
     printf("Error (readin): Input solution and problem file do not match.\n");
@@ -247,7 +247,7 @@ size_t readin(size_t m, size_t numblk, size_t* blksz, char* blktype, double* R, 
   base = 0;
   for(k = 0; k < numblk; k++) {
 
-    ret = fscanf(fid, "primal variable %d %c %d %d %d\n", &ti1, &tc1, &ti2, &ti3, &(ranks[k])); ti1--;
+    ret = fscanf(fid, "primal variable %zd %c %zd %zd %zd\n", &ti1, &tc1, &ti2, &ti3, &(ranks[k])); ti1--;
 
     if(ti1 != k || tc1 != blktype[k] || ti2 != blksz[k] || ti3 != maxranks[k]) {
       printf("Error (readin): Input solution and problem file do not match.\n");
@@ -282,25 +282,25 @@ size_t writeout(size_t m, size_t numblk, size_t* blksz, char* blktype, double* R
 {
   size_t h, k, base;
 
-  fprintf(fid, "dual variable %d\n", m);
+  fprintf(fid, "dual variable %zd\n", m);
   for(h = 0; h < m; h++) fprintf(fid, "%.16e\n", lambda[h]*pieces[7]);
   base = 0;
   for(k = 0; k < numblk; k++) {
-    fprintf(fid, "primal variable %d %c %d %d %d\n", k+1, blktype[k], blksz[k], maxranks[k], ranks[k]);
+    fprintf(fid, "primal variable %zd %c %zd %zd %zd\n", k+1, blktype[k], blksz[k], maxranks[k], ranks[k]);
     for(h = 0; h < blksz[k]*ranks[k]; h++)
       fprintf(fid, "%.16e\n", R[base + h]);
     base += blksz[k]*ranks[k];
   }
   fprintf(fid, "special majiter ");
-  fprintf(fid, "%d\n", (size_t)pieces[0]);
+  fprintf(fid, "%zu\n", (size_t)pieces[0]);
   fprintf(fid, "special iter ");
-  fprintf(fid, "%d\n", (size_t)pieces[1]);
+  fprintf(fid, "%zu\n", (size_t)pieces[1]);
   fprintf(fid, "special lambdaupdate ");
-  fprintf(fid, "%d\n", (size_t)pieces[2]);
+  fprintf(fid, "%zu\n", (size_t)pieces[2]);
   fprintf(fid, "special CG ");
-  fprintf(fid, "%d\n", (size_t)pieces[3]);
+  fprintf(fid, "%zu\n", (size_t)pieces[3]);
   fprintf(fid, "special curr_CG ");
-  fprintf(fid, "%d\n", (size_t)pieces[4]);
+  fprintf(fid, "%zu\n", (size_t)pieces[4]);
   fprintf(fid, "special totaltime ");
   fprintf(fid, "%.16e\n", (double)pieces[5]);
   fprintf(fid, "special sigma ");

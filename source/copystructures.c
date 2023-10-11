@@ -92,7 +92,7 @@ size_t copystructures(problemdata* data, size_t m, size_t numblk, size_t* blksz,
             h++;
             if(CArow[k] != CAcol[k]) {
               printf("Error (copystructures.c): Data for diagonal matrix is not diagonal.\n");
-              printf("%d %d\n", CArow[k], CAcol[k]);
+              printf("%zu %zu\n", CArow[k], CAcol[k]);
               exit(0);
             }
             Adiag->ind[h] = CArow[k];

@@ -23,12 +23,12 @@ size_t printparams(problemdata* data)
   printf("rho_c        = %.1e\n", data->rho_c);
 //   printf("method       = %d\n", data->method);
   printf("sigmafac     = %.1f\n", data->sigmafac);
-  printf("rankreduce   = %d\n", data->rankreduce);
-  printf("timelim      = %d\n", data->timelim);
-  printf("dthresh_dim  = %d\n", data->dthresh_dim);
+  printf("rankreduce   = %zu\n", data->rankreduce);
+  printf("timelim      = %zu\n", data->timelim);
+  printf("dthresh_dim  = %zu\n", data->dthresh_dim);
   printf("dthresh_dens = %.2f\n", data->dthresh_dens);
 
-  printf("numbfgsvecs  = %d\n", data->numbfgsvecs);
+  printf("numbfgsvecs  = %zu\n", data->numbfgsvecs);
 //   printf("mixedtol     = %.1e\n", data->mixedtol);
 //   printf("doAR         = %d\n", data->doAR);
   printf("rankredtol   = %.16e\n", data->rankredtol);
@@ -37,8 +37,8 @@ size_t printparams(problemdata* data)
 //   printf("gdens        = %.1f\n", data->gdens);
 //   printf("reorder      = %d\n", data->reorder);
   printf("gaptol       = %.1e\n", data->gaptol);
-  printf("checkbd      = %d\n", data->checkbd);
-  printf("typebd       = %d\n", data->typebd);
+  printf("checkbd      = %zu\n", data->checkbd);
+  printf("typebd       = %zu\n", data->typebd);
 
   return 0;
 }
