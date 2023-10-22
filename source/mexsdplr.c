@@ -1272,22 +1272,22 @@ seed
 
       if(nlhs > 2) {
 
-        MYCALLOC(infonames, char*, 6);
-        for(i = 0; i < 6; i++)
-          MYCALLOC(infonames[i], char, 9);
+        MYCALLOC(infonames, char*, 5);
+        for(i = 0; i < 5; i++)
+          MYCALLOC(infonames[i], char, 10);
         strcpy(infonames[0], "majoriter");
         strcpy(infonames[1], "minoriter");
         strcpy(infonames[2], "cgs");
         strcpy(infonames[3], "time");
         strcpy(infonames[4], "penalty");
 
-        plhs[2] = mxCreateStructMatrix(1,1,6,(const char **)infonames);
+        plhs[2] = mxCreateStructMatrix(1,1,5,(const char **)infonames);
         if(plhs[2] == NULL) {
           mexErrMsgTxt("Internal error (8).");
           return;
         }
 
-        for(i = 0; i < 6; i++)
+        for(i = 0; i < 5; i++)
           MYFREE(infonames[i]);
         MYFREE(infonames);
 
@@ -1323,9 +1323,9 @@ seed
 
         /* Pass sc */
         /* field = mxCreateDoubleScalar(pieces[7]); */
-        field = mxCreateDoubleMatrix(1, 1, mxREAL);
-        *mxGetPr(field) = pieces[7];
-        mxSetFieldByNumber(plhs[2],0,5,field);
+        /* field = mxCreateDoubleMatrix(1, 1, mxREAL); */
+        /* *mxGetPr(field) = pieces[7]; */
+        /* mxSetFieldByNumber(plhs[2],0,5,field); */
 
         if(nlhs > 3) {
 
