@@ -10,7 +10,7 @@
 
 double linesearch(problemdata* data, double* R, double* D, double max, double* funcval, size_t update)
 {
-  size_t i;
+  size_t i, d;
 
   double ss=0.0;
   double quartic[5], cubic[4], roots[3], f0, fmax, f1, f2, f3, minval;
@@ -55,42 +55,47 @@ double linesearch(problemdata* data, double* R, double* D, double max, double* f
   cubic[2] = 3.0*quartic[3];
   cubic[3] = 4.0*quartic[4];
 
-  if(fabs(cubic[3]) < DBL_EPSILON) {
-    printf("Surprise! Got a quadratic function!\n");
-    exit(0);
-  }
+  for(d = 3; fabs(cubic[d]) < DBL_EPSILON && d >= 0; d--);
 
   roots[0] = roots[1] = roots[2] = 1.0e10;
-  gsl_poly_solve_cubic(cubic[2]/cubic[3], cubic[1]/cubic[3], cubic[0]/cubic[3], roots, roots+1, roots+2);
+  if(d == 3)
+    gsl_poly_solve_cubic(cubic[2]/cubic[3], cubic[1]/cubic[3], cubic[0]/cubic[3], roots, roots+1, roots+2);
+  else if(d == 2)
+    gsl_poly_solve_quadratic(cubic[2], cubic[1], cubic[0], roots, roots+1);
+  else
+    roots[0] = -cubic[0] / cubic[1];
   //printf("%f    %f    %f\n", roots[0], roots[1], roots[2]);
 
   f0 = quartic[0];
 
   fmax = gsl_poly_eval(quartic, 5, max);
 
-  if(fabs(roots[0] - 1.0e10) < DBL_EPSILON ||
+  if(d < 1 || fabs(roots[0] - 1.0e10) < DBL_EPSILON ||
                    roots[0] < DBL_EPSILON ||
              roots[0] - max > DBL_EPSILON) f1 = 1.0e20;
   else f1 = gsl_poly_eval(quartic, 5, roots[0]);
 
-  if(fabs(roots[1] - 1.0e10) < DBL_EPSILON || roots[1] < DBL_EPSILON || roots[1] - max > DBL_EPSILON) f2 = 1.0e20;
+  if(d < 2 || fabs(roots[1] - 1.0e10) < DBL_EPSILON || roots[1] < DBL_EPSILON || roots[1] - max > DBL_EPSILON) f2 = 1.0e20;
   else f2 = gsl_poly_eval(quartic, 5, roots[1]);
 
-  if(fabs(roots[2] - 1.0e10) < DBL_EPSILON || roots[2] < DBL_EPSILON || roots[2] - max > DBL_EPSILON) f3 = 1.0e20;
+  if(d < 3 || fabs(roots[2] - 1.0e10) < DBL_EPSILON || roots[2] < DBL_EPSILON || roots[2] - max > DBL_EPSILON) f3 = 1.0e20;
   else f3 = gsl_poly_eval(quartic, 5, roots[2]);
 
   minval = 1.0e20;
   minval = mymin(f0,minval);
   minval = mymin(fmax,minval);
-  minval = mymin(f1,minval);
-  minval = mymin(f2,minval);
-  minval = mymin(f3,minval);
+  if(d > 0)
+    minval = mymin(f1,minval);
+  if(d > 1)
+    minval = mymin(f2,minval);
+  if(d > 2)
+    minval = mymin(f3,minval);
 
   if(fabs(f0 - minval) < DBL_EPSILON) ss = 0.0;
   if(fabs(fmax - minval) < DBL_EPSILON) ss = max;
-  if(fabs(f1 - minval) < DBL_EPSILON) ss = roots[0];
-  if(fabs(f2 - minval) < DBL_EPSILON) ss = roots[1];
-  if(fabs(f3 - minval) < DBL_EPSILON) ss = roots[2];
+  if(d > 0 && fabs(f1 - minval) < DBL_EPSILON) ss = roots[0];
+  if(d > 1 && fabs(f2 - minval) < DBL_EPSILON) ss = roots[1];
+  if(d > 2 && fabs(f3 - minval) < DBL_EPSILON) ss = roots[2];
 
   // Setup next values
 

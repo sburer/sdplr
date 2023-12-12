@@ -15,6 +15,7 @@ extern void dseupd_();
 extern void dsyev_(char*, char*, size_t*, double*, size_t*, double*, double*, size_t*, size_t*);
 extern void dtrmm_();
 extern size_t idamax_(size_t*, double*, size_t*);
+extern size_t gsl_poly_solve_quadratic(double, double, double, double*, double*);
 extern size_t gsl_poly_solve_cubic(double, double, double, double*, double*, double*);
 extern double gsl_poly_eval(double*, size_t, double);
 extern size_t daxpy_(size_t*, double*, double*, size_t*, double*, size_t*);
