@@ -19,12 +19,11 @@
 
 /* solve_quadratic.c - finds the real roots of a x^2 + b x + c = 0 */
 
-#include <config.h>
+//#include <config.h>
 #include <math.h>
+#include "gsl_poly.h"
 
-#include <gsl/gsl_poly.h>
-
-int 
+size_t
 gsl_poly_solve_quadratic (double a, double b, double c, 
                           double *x0, double *x1)
 {
