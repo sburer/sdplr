@@ -565,7 +565,7 @@ size_t readdata_sdplr(char* datafilename, size_t* passed_m, size_t* passed_numbl
     for(k = 0; k < numblk; k++) {
       ret = fscanf(datafile, "%zu %zu %c %zu\n", &num, &blk, &type, &sz);
       if(ret < 4) {
-        printf("error with fscanf!\n");
+        printf("error with fscanf for reading type and size for constraint %d and block %d : Read %d values instead of 4!\n", i, k, ret);
         exit(0);
       }
       if(type == 's') {
@@ -577,12 +577,13 @@ size_t readdata_sdplr(char* datafilename, size_t* passed_m, size_t* passed_numbl
       }
       else if(type == 'l') {
         nnz[ DATABLOCKIND(num,blk,numblk) ] = -sz*(blksz[blk-1] + 1); // neg num will allow to identify low-rank data matrices later
-        for(j = 1; j <= sz*(blksz[blk-1] + 1); j++)
+        for(j = 1; j <= sz*(blksz[blk-1] + 1); j++) {
           ret = fscanf(datafile, "%lf", &entry);
           if(ret < 1) {
-            printf("error with fscanf!\n");
+            printf("error with fscanf for constraint %d and block %d for entry %d of low rank!\n", i, k, j);
             exit(0);
           }
+        }
       }
     }
   }
