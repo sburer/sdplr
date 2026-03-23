@@ -57,7 +57,7 @@ size_t readdata_sdpa(char* datafilename, size_t* passed_m, size_t* passed_numblk
   datafile = fopen(datafilename, "r");
   if(datafile == NULL) {
     printf("Can't get file %s\n", datafilename);
-    exit(0);
+    exit(1);
   }
   buflen = max_line_length(datafile) + 10;
   fclose(datafile);
@@ -177,7 +177,7 @@ size_t readdata_sdpa(char* datafilename, size_t* passed_m, size_t* passed_numblk
     ret = fscanf(datafile, "%u %u %u %u %le", &num, &blk, &pos1, &pos2, &entry);
     if(pos1 == 0 || pos2 == 0) {
       printf("Error (readdata_sdpa): Encountered '0' row or column index.\n");
-      exit(0);
+      exit(1);
     }
     sam_num[ct] = num;
     sam_blk[ct] = blk;
@@ -518,7 +518,7 @@ size_t readdata_sdplr(char* datafilename, size_t* passed_m, size_t* passed_numbl
   datafile = fopen(datafilename, "r");
   if(datafile == NULL) {
     printf("Error (readdata_sdplr): Can't get file %s.\n", datafilename);
-    exit(0);
+    exit(1);
   }
 
   // Read m
@@ -541,7 +541,7 @@ size_t readdata_sdplr(char* datafilename, size_t* passed_m, size_t* passed_numbl
       blksz[blk] *= -1;
       blktype[blk] = 'd';
     }
-    else { printf("Problem reading data. Block size 0!\n"); exit(0); }
+    else { printf("Problem reading data. Block size 0!\n"); exit(1); }
   }    
   
 
@@ -566,7 +566,7 @@ size_t readdata_sdplr(char* datafilename, size_t* passed_m, size_t* passed_numbl
       ret = fscanf(datafile, "%zu %zu %c %zu\n", &num, &blk, &type, &sz);
       if(ret < 4) {
         printf("error with fscanf!\n");
-        exit(0);
+        exit(1);
       }
       if(type == 's') {
         nnz[ DATABLOCKIND(num,blk,numblk) ] = 0;
@@ -581,7 +581,7 @@ size_t readdata_sdplr(char* datafilename, size_t* passed_m, size_t* passed_numbl
           ret = fscanf(datafile, "%lf", &entry);
           if(ret < 1) {
             printf("error with fscanf!\n");
-            exit(0);
+            exit(1);
           }
       }
     }
@@ -657,7 +657,7 @@ size_t readdata_sdplr(char* datafilename, size_t* passed_m, size_t* passed_numbl
         for(j = 1; j <= sz; j++) {
           ret = fscanf(datafile, "%zu %zu %lf", &pos1, &pos2, &entry);
           if(fabs(entry) > DBL_EPSILON) {
-            if(pos1 == 0 || pos2 == 0) { printf("Error (readdata_sdplr): Encountered '0' row or column index.\n"); exit(0); }
+            if(pos1 == 0 || pos2 == 0) { printf("Error (readdata_sdplr): Encountered '0' row or column index.\n"); exit(1); }
             if(pos1 > pos2) { CArow[ct] = pos1; CAcol[ct] = pos2; }
             else { CArow[ct] = pos2; CAcol[ct] = pos1; }
             CAent[ct] = entry;
@@ -742,7 +742,7 @@ size_t readdata_raw(char* datafilename, size_t* passed_m, size_t* passed_numblk,
   fid = fopen(datafilename, "r");
   if(fid == NULL) {
     printf("Can't get file %s\n", datafilename);
-    exit(0);
+    exit(1);
   }
 
   ret = fscanf(fid, "%zu\n", &m);
@@ -1022,7 +1022,7 @@ size_t writedata_sdpa(char* datafilename, size_t m, size_t numblk, size_t* blksz
       else if(CAinfo_type[tmp] == 'l')
       {
         printf("error: Low-rank matrices not supported in SDPA format.\n");
-        exit(0);
+        exit(1);
       }
       else if(CAinfo_type[tmp] == 'd')
       {

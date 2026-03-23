@@ -386,7 +386,7 @@ size_t generate_params(void)
     ret = fgets(usrfilename, 100, stdin);
     if(ret == NULL) {
       printf("Error\n");
-      exit(0);
+      exit(1);
     }
     usrfilename[strlen(usrfilename)-1] = '\0';
     if(strlen(usrfilename) == 0) strcpy(usrfilename, filename);
@@ -404,7 +404,7 @@ size_t generate_params(void)
       ret = fgets(in[i], 100, stdin);
       if(ret == NULL) {
         printf("Error\n");
-        exit(0);
+        exit(1);
       }
       in[i][strlen(in[i])-1] = '\0';
       if(strlen(in[i]) == 0) strcpy(in[i], def[i]);

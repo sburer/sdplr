@@ -42,7 +42,7 @@ signed main(signed argc, char *argv[])
   if(argc != 2 && argc != 3 && argc != 4 && argc != 5) {
     printf("Usage #1: %s <input_file> [params_file] [soln_in] [soln_out]\n", argv[0]);
     printf("Usage #2: %s gen_params\n", argv[0]);
-    exit(0);
+    exit(1);
   }
   // End: Perform some simple checks
 
@@ -75,7 +75,7 @@ signed main(signed argc, char *argv[])
   if(ret == 0) printf("Warning (main): Some problems getting parameters.\n");
   if(ret == -1) {
     printf("Error (main): Problem getting parameters.\n");
-    exit(0);
+    exit(1);
   }
 
 
@@ -107,7 +107,7 @@ signed main(signed argc, char *argv[])
   for(k = 0; k < numblk; k++)
     if(blksz[k] == 0) {
       printf("Error (main): Block %zu has size 0.\n", k);
-      exit(0);
+      exit(1);
     }
 
 
@@ -239,7 +239,7 @@ size_t readin(size_t m, size_t numblk, size_t* blksz, char* blktype, double* R, 
 
   if(ti1 != m) {
     printf("Error (readin): Input solution and problem file do not match.\n");
-    exit(0);
+    exit(1);
   }
 
   for(h = 0; h < m; h++) ret = fscanf(fid, "%lf\n", &(lambda[h]));
@@ -251,7 +251,7 @@ size_t readin(size_t m, size_t numblk, size_t* blksz, char* blktype, double* R, 
 
     if(ti1 != k || tc1 != blktype[k] || ti2 != blksz[k] || ti3 != maxranks[k]) {
       printf("Error (readin): Input solution and problem file do not match.\n");
-      exit(0);
+      exit(1);
     }
 
     for(h = 0; h < blksz[k]*ranks[k]; h++) ret = fscanf(fid, "%lf\n", &(R[base + h]));

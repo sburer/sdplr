@@ -55,7 +55,7 @@ size_t copystructures(problemdata* data, size_t m, size_t numblk, size_t* blksz,
 /*         mexErrMsgTxt("copystructures: type not one of three possible values."); */
 /* #else */
         printf("copystructures: type not one of three possible values.\n");
-        exit(0);
+        exit(1);
 /* #endif */
       }
 
@@ -93,7 +93,7 @@ size_t copystructures(problemdata* data, size_t m, size_t numblk, size_t* blksz,
             if(CArow[k] != CAcol[k]) {
               printf("Error (copystructures.c): Data for diagonal matrix is not diagonal.\n");
               printf("%zu %zu\n", CArow[k], CAcol[k]);
-              exit(0);
+              exit(1);
             }
             Adiag->ind[h] = CArow[k];
             Adiag->ent[h] = CAent[k];

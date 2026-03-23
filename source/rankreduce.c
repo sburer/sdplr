@@ -58,7 +58,7 @@ size_t dorankreduce(problemdata* d, double* R)
       dgeqp3_(&p, &q, U + base + 1, &p, jpvt + 1, tau + 1, work + 1, &lwork, &info);
       if(info != 0) {
         printf("Error (dorankreduce.c): Problem with QR factorization! (info = %zu)\n", info);
-        exit(0);
+        exit(1);
       }
 
       // Overwrite strictly lower part of U with 0 (this is necessary later)
@@ -96,7 +96,7 @@ size_t dorankreduce(problemdata* d, double* R)
         printf("Error (rankreduce.c): Unexpected results from QR factorization.\n");
         //for(i = 1; i <= p; i++)
         //  printf("%e\n", U[base + (i-1)*p + i]);
-        exit(0);
+        exit(1);
       }
 
       // Copy permuted U size_to tempU and do transpose at the same time

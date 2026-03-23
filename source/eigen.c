@@ -226,7 +226,7 @@ int Sblockmineval(problemdata* d, double* blkevals)
         jobz = 'n'; uplo = 'l';
         EASYDCOPY(d->blksz[k]*d->blksz[k], d->S + d->XS_blkptr[k] - 1, Scopy);
         dsyev_(&jobz, &uplo, &(d->blksz[k]), Scopy + 1, &(d->blksz[k]), evals + 1, work + 1, &dimwork, &info);
-        if((int)info != 0) { printf("Eigenvalue computation failed.\n"); exit(0); }
+        if((int)info != 0) { printf("Eigenvalue computation failed.\n"); exit(1); }
         blkevals[++ct] = evals[1]; 
 
     }
