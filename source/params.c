@@ -160,7 +160,7 @@ size_t*    typebd)
     *numbfgsvecs  = (size_t)values[9];
     *rankredtol   =      values[10];
     *gaptol       =      values[11];
-    *checkbd      = (size_t)values[12];
+    *checkbd      = (size_t)(int)values[12]; /* cast via int: value can be -1 */
     *typebd       = (size_t)values[13];
 
     // Perform some simple checks
@@ -251,29 +251,37 @@ size_t*    typebd)
 
 size_t getparams_maxlinelength(FILE *datafile)
 {
-  size_t maxlen=0, k, c;
-  
+  /* c must be int (not size_t or char) to correctly detect EOF (-1).
+   * On platforms where char/size_t is unsigned the EOF comparison
+   * never triggers, causing an infinite loop. */
+  size_t maxlen=0, k;
+  int c;
+
   do {
 
     k = 0;
 
     do {
-      c = getc(datafile); 
+      c = getc(datafile);
       k++;
     } while(c != '\n' && c != EOF);
 
     if(k > maxlen) maxlen=k;
 
   } while(c != EOF);
-  
+
   return(maxlen);
 }
 
 size_t getparams_getline(FILE *datafile, char *buffer, size_t bufsiz)
 {
+  /* c must be int (not char) to correctly detect EOF (-1).
+   * On platforms where char is unsigned (e.g. aarch64/ARM), storing
+   * getc() in a char and comparing against EOF always fails, causing
+   * an infinite loop that fills the output buffer indefinitely. */
   size_t k;
-  char c;
-  
+  int c;
+
   k = 0;
 
   do {
@@ -282,7 +290,7 @@ size_t getparams_getline(FILE *datafile, char *buffer, size_t bufsiz)
       return(-1);
     }
     c = getc(datafile);
-    buffer[k] = c;
+    if(c != EOF) buffer[k] = (char)c;  /* don't store 0xFF sentinel in buffer */
     k++;
   } while(c != '\n' && c != EOF);
 
@@ -386,7 +394,7 @@ size_t generate_params(void)
     ret = fgets(usrfilename, 100, stdin);
     if(ret == NULL) {
       printf("Error\n");
-      exit(0);
+      exit(1);
     }
     usrfilename[strlen(usrfilename)-1] = '\0';
     if(strlen(usrfilename) == 0) strcpy(usrfilename, filename);
@@ -404,7 +412,7 @@ size_t generate_params(void)
       ret = fgets(in[i], 100, stdin);
       if(ret == NULL) {
         printf("Error\n");
-        exit(0);
+        exit(1);
       }
       in[i][strlen(in[i])-1] = '\0';
       if(strlen(in[i]) == 0) strcpy(in[i], def[i]);

@@ -96,10 +96,6 @@ size_t Aoper(problemdata* d, double* U, double* V, double* UVt, size_t same, siz
       for(j = 1; j <= k-1; j++)
         base += d->blksz[j]*d->rank[j];
 
-/*      printf("k = %d\n", k);
-      printf("i = %d\n", i);
-      printf("rk = %d\n", rk);
-      printf("base = %d\n", base); */
 
 
       if(i > 0 || obj) {
@@ -134,9 +130,6 @@ size_t Aoper(problemdata* d, double* U, double* V, double* UVt, size_t same, siz
         for(j = 1; j <= A->lr->ncol; j++)
           sum += A->lr->d[j]*EASYDDOT(rk, global_UtB + (j-1)*rk, global_VtB + (j-1)*rk);
         results[i] += sum;
-/*        printf("sum = %f\n", sum);
-
-        exit(0); */
 
       }
     }
@@ -205,7 +198,7 @@ size_t Aoper_formUVt(problemdata* data, double* passedUVt, double* U, double* V,
           UVt[i] = pow(U[base + i], 2.0);
 
       }
-      else { printf("Aoper_formUVt: Unrecognized blktype.\n"); exit(0); }
+      else { printf("Aoper_formUVt: Unrecognized blktype.\n"); exit(1); }
 
       base += blksz*rank;
 
@@ -250,7 +243,7 @@ size_t Aoper_formUVt(problemdata* data, double* passedUVt, double* U, double* V,
           UVt[i] = U[base + i]*V[base + i];
 
       }
-      else { printf("Aoper_formUVt: Unrecognized blktype.\n"); exit(0); }
+      else { printf("Aoper_formUVt: Unrecognized blktype.\n"); exit(1); }
 
       base += blksz*rank;
 
@@ -405,7 +398,7 @@ size_t AToper(problemdata* data, double* y, double* S, size_t obj)
     if(data->XS_blksto[k] == DENSE) {
 
       // sanity check (delete later)
-      if(data->blktype[k] != SDPBLK) { printf("AToper: Unexpected block type!\n"); exit(0); }
+      if(data->blktype[k] != SDPBLK) { printf("AToper: Unexpected block type!\n"); exit(1); }
 
       // Setup easy posize_ter to data matrix
       

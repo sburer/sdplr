@@ -306,7 +306,7 @@ size_t initialize (problemdata * data, size_t * maxranks)
       for (i = 1; i <= data->m; i++) if (data->A[i][k]->type == 'l') { data->lr_mat[++ct] = i; data->lr_blk[ct] = k; }
     }
 
-  if(ct != data->lr_num) { printf("Problem getting lowrank matrices. (%zu != %zu)\n", ct, data->lr_num); exit(0); }
+  if(ct != data->lr_num) { printf("Problem getting lowrank matrices. (%zu != %zu)\n", ct, data->lr_num); exit(1); }
 
   // END: Setup new data structures
   // END: Setup new data structures
@@ -432,7 +432,7 @@ size_t locatetype(problemdata *data, size_t blk, char type, size_t **passed_ind,
 
   ct = 0;                        if (data->C   [k]->type == type) ind[++ct] = 0;
   for (i = 1; i <= data->m; i++) if (data->A[i][k]->type == type) ind[++ct] = i;
-  if (ct != nind) { printf ("locatetype: problem with setting up ind\n"); exit (0); }
+  if (ct != nind) { printf ("locatetype: problem with setting up ind\n"); exit (1); }
 
   *passed_ind = ind;
   *passed_nind = nind;

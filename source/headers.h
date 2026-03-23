@@ -5,10 +5,9 @@
 #include <string.h>
 #include <float.h>
 #include <math.h>
+#include <time.h>
 
-#ifdef __WIN32
-  #include <time.h>
-#else
+#ifndef __WIN32
   #include <sys/times.h>
   #include <unistd.h>
 #endif

@@ -53,7 +53,7 @@ size_t sdplrlib (size_t m, size_t numblk, size_t *blksz, char *blktype, double *
   size_t  i, k, localiter=0, recalc=5, recalcct=10000000;
   char line[1000], difficulty='h';
   double bestinfeas=1.0e10;
-  double sc, overallsc, tv; // scaling related
+  double overallsc, tv;
   double lastval; // monitor slowing down of optimization
   double origval;
 
@@ -149,10 +149,7 @@ size_t sdplrlib (size_t m, size_t numblk, size_t *blksz, char *blktype, double *
   data->sigma  = (double) pieces[6];
   overallsc    = (double) pieces[7];
 
-  // Do scaling and inititalize total time correctly
-  if(SCALE_OBJ && normC - 1.0e-10 > DBL_EPSILON) do_scaling(data,overallsc,&normC);
-//   printf("overallsc = %f\n", overallsc);
-//   printf("normC = %f\n", normC);
+  // Inititalize total time correctly
   data->totaltime = timeoffset;
   
   // Now can setup rho_c_tol
@@ -160,8 +157,7 @@ size_t sdplrlib (size_t m, size_t numblk, size_t *blksz, char *blktype, double *
 
   // Calculate val, grad, etc.
   essential_calcs (data, R, normC, normb, &val, &rho_c_val, &rho_f_val);
-//   printf("val = %f\n", val);
-  
+
   // Save original value
   origval = overallsc*val;
 
@@ -169,8 +165,6 @@ size_t sdplrlib (size_t m, size_t numblk, size_t *blksz, char *blktype, double *
         printf(""); fflush(stdout);
         mexEvalString("drawnow;");
 #endif
-
-//  printf("Hey 0\n"); fflush(stdout); mexEvalString("drawnow;");
 
   /*** ITERATE ITERATE ITERATE ***/
   /*** ITERATE ITERATE ITERATE ***/
@@ -229,14 +223,7 @@ size_t sdplrlib (size_t m, size_t numblk, size_t *blksz, char *blktype, double *
         }
 
         // Update totaltime
-//         printf("current_time = %f\n", current_time(timeorig));
-//         printf("timeoffset = %f\n", timeoffset);
         data->totaltime = current_time(timeorig) + timeoffset;
-//         printf("current_time = %f\n", current_time(timeorig));
-//         printf("current_time = %f\n", current_time(timeorig));
-//         printf("current_time = %f\n", current_time(timeorig));
-//         printf("timeoffset = %f\n", timeoffset);
-//         printf("data->totaltime = %f   %f\n", data->totaltime, (double)current_time(timeorig) + (double)timeoffset);
 
         // Possibly terminate
         if (data->totaltime >= data->timelim || rho_f_val <= data->rho_f || iter >= 10000000 || CG >= 10000000) {
@@ -245,7 +232,6 @@ size_t sdplrlib (size_t m, size_t numblk, size_t *blksz, char *blktype, double *
             goto END_CURR_MAJOR_ITERATION;
           }
         
-        //printf("iter = %d  CGS = %4d  val = %f   ss = %.1e   \n", iter, CG, val, alpha);
 
         bestinfeas = mymin(rho_f_val, bestinfeas);
 
@@ -261,12 +247,6 @@ size_t sdplrlib (size_t m, size_t numblk, size_t *blksz, char *blktype, double *
       EASYDAXPY (data->m, -data->sigma, data->vio, data->lambda);
 
       tv = EASYDNRM2(data->m,data->lambda);
-      if(SCALE_OBJ && normC - 1.0e-10 > DBL_EPSILON && majiter >= 2 && (tv - 10.0 > DBL_EPSILON || DBL_EPSILON < 0.1 - tv)) {
-        if(tv - 10.0 > DBL_EPSILON) sc = ( 1.0 - 0.9*pow(10.0/tv,0.1) )*tv;
-        else                        sc = ( 9.0*pow(10.0*tv,0.1) + 1.0 )*tv;
-        overallsc *= sc;
-        do_scaling(data,sc,&normC);
-      }
 
       essential_calcs (data, R, normC, normb, &val, &rho_c_val, &rho_f_val);
 

@@ -6,6 +6,14 @@ gsl:
 sdplr:
 	cd source; make
 
+# Run full test suite (all problems in tests/data/)
+test: sdplr
+	bash tests/run_tests.sh
+
+# Quick smoke test — vibra1 only
+test-fast: sdplr
+	bash tests/run_tests.sh --fast
+
 clean:
 	cd gsl-1.5/poly; make clean
 	cd source; make clean

@@ -3,8 +3,6 @@
 #include "mex.h"
 #endif
 
-// Parameters and macros just for this file
-#define RANDOM 0
 // #define DATABLOCKIND(DATA,BLOCK,NUMBLOCK) ((DATA+1)-1)*NUMBLOCK + BLOCK - 1
 
 signed main(signed argc, char *argv[])
@@ -42,7 +40,7 @@ signed main(signed argc, char *argv[])
   if(argc != 2 && argc != 3 && argc != 4 && argc != 5) {
     printf("Usage #1: %s <input_file> [params_file] [soln_in] [soln_out]\n", argv[0]);
     printf("Usage #2: %s gen_params\n", argv[0]);
-    exit(0);
+    exit(1);
   }
   // End: Perform some simple checks
 
@@ -75,7 +73,7 @@ signed main(signed argc, char *argv[])
   if(ret == 0) printf("Warning (main): Some problems getting parameters.\n");
   if(ret == -1) {
     printf("Error (main): Problem getting parameters.\n");
-    exit(0);
+    exit(1);
   }
 
 
@@ -107,7 +105,7 @@ signed main(signed argc, char *argv[])
   for(k = 0; k < numblk; k++)
     if(blksz[k] == 0) {
       printf("Error (main): Block %zu has size 0.\n", k);
-      exit(0);
+      exit(1);
     }
 
 
@@ -129,8 +127,7 @@ signed main(signed argc, char *argv[])
     fclose(fid);
   }
   else {
-    /* if(RANDOM) srand( (unsigned)time( NULL ) ); */ /* SAM 2023-10-04 */
-    if(RANDOM) srand(925);
+    if(RANDOM) srand((unsigned)time(NULL));
     else       srand(925);
     for(h = 0; h < nr; h++) {
       R[h]  = (double)rand()/RAND_MAX;
@@ -149,6 +146,10 @@ signed main(signed argc, char *argv[])
 //    writedata_sdpa("temp.dat-s", m, numblk, blksz, blktype, b, CAent, CArow, CAcol, CAinfo_entptr, CAinfo_type);
 //   exit(0);
   
+  // R and lambda are allocated 0-based here but passed as R-1 and lambda-1
+  // so that sdplrlib and all internal routines access them with 1-based
+  // indices ([1..nr] and [1..m] respectively).  See INDEXING CONVENTION
+  // comment in macros.h for the full explanation.
   sdplrlib(m, numblk, blksz, blktype, b, CAent, CArow, CAcol,
            CAinfo_entptr, CAinfo_type,
            numbfgsvecs, rho_f, rho_c, sigmafac, rankreduce, gaptol,
@@ -232,48 +233,88 @@ size_t getstorage(size_t m, size_t numblk, size_t* blksz, char* blktype,
 size_t readin(size_t m, size_t numblk, size_t* blksz, char* blktype, double* R, double* lambda, size_t* maxranks, size_t* ranks, double* pieces, FILE* fid)
 {
   size_t h, k, base, ti1, ti2, ti3;
-  size_t ret;
+  int ret;  /* fscanf returns int, not size_t */
   char tc1;
 
   ret = fscanf(fid, "dual variable %zd\n", &ti1);
+  if(ret != 1) {
+    printf("Error (readin): Could not read dual variable count from solution file.\n");
+    exit(1);
+  }
 
   if(ti1 != m) {
     printf("Error (readin): Input solution and problem file do not match.\n");
-    exit(0);
+    exit(1);
   }
 
-  for(h = 0; h < m; h++) ret = fscanf(fid, "%lf\n", &(lambda[h]));
+  for(h = 0; h < m; h++) {
+    ret = fscanf(fid, "%lf\n", &(lambda[h]));
+    if(ret != 1) {
+      printf("Error (readin): Could not read dual variable %zu from solution file.\n", h);
+      exit(1);
+    }
+  }
 
   base = 0;
   for(k = 0; k < numblk; k++) {
 
-    ret = fscanf(fid, "primal variable %zd %c %zd %zd %zd\n", &ti1, &tc1, &ti2, &ti3, &(ranks[k])); ti1--;
+    ret = fscanf(fid, "primal variable %zd %c %zd %zd %zd\n", &ti1, &tc1, &ti2, &ti3, &(ranks[k]));
+    if(ret != 5) {
+      printf("Error (readin): Could not read primal variable header for block %zu.\n", k);
+      exit(1);
+    }
+    ti1--;
 
     if(ti1 != k || tc1 != blktype[k] || ti2 != blksz[k] || ti3 != maxranks[k]) {
       printf("Error (readin): Input solution and problem file do not match.\n");
-      exit(0);
+      exit(1);
     }
 
-    for(h = 0; h < blksz[k]*ranks[k]; h++) ret = fscanf(fid, "%lf\n", &(R[base + h]));
+    for(h = 0; h < blksz[k]*ranks[k]; h++) {
+      ret = fscanf(fid, "%lf\n", &(R[base + h]));
+      if(ret != 1) {
+        printf("Error (readin): Could not read R[%zu] for block %zu from solution file.\n", h, k);
+        exit(1);
+      }
+    }
     base += blksz[k]*ranks[k];
   }
 
-  ret = fscanf(fid, "special majiter ");
+  /* For label-only formats (no conversion specifiers), fscanf always returns 0
+   * on success; it cannot signal a literal mismatch via return value.  We cast
+   * those calls to void and rely on the subsequent value read failing (ret != 1)
+   * to catch a corrupted or mismatched solution file. */
+  (void)fscanf(fid, "special majiter ");
   ret = fscanf(fid, "%lf\n", &(pieces[0]));
-  ret = fscanf(fid, "special iter ");
+  if(ret != 1) { printf("Error (readin): Could not read special field 'majiter'.\n");     exit(1); }
+
+  (void)fscanf(fid, "special iter ");
   ret = fscanf(fid, "%lf\n", &(pieces[1]));
-  ret = fscanf(fid, "special lambdaupdate ");
+  if(ret != 1) { printf("Error (readin): Could not read special field 'iter'.\n");        exit(1); }
+
+  (void)fscanf(fid, "special lambdaupdate ");
   ret = fscanf(fid, "%lf\n", &(pieces[2]));
-  ret = fscanf(fid, "special CG ");
+  if(ret != 1) { printf("Error (readin): Could not read special field 'lambdaupdate'.\n"); exit(1); }
+
+  (void)fscanf(fid, "special CG ");
   ret = fscanf(fid, "%lf\n", &(pieces[3]));
-  ret = fscanf(fid, "special curr_CG ");
+  if(ret != 1) { printf("Error (readin): Could not read special field 'CG'.\n");          exit(1); }
+
+  (void)fscanf(fid, "special curr_CG ");
   ret = fscanf(fid, "%lf\n", &(pieces[4]));
-  ret = fscanf(fid, "special totaltime ");
+  if(ret != 1) { printf("Error (readin): Could not read special field 'curr_CG'.\n");     exit(1); }
+
+  (void)fscanf(fid, "special totaltime ");
   ret = fscanf(fid, "%lf\n", &(pieces[5]));
-  ret = fscanf(fid, "special sigma ");
+  if(ret != 1) { printf("Error (readin): Could not read special field 'totaltime'.\n");   exit(1); }
+
+  (void)fscanf(fid, "special sigma ");
   ret = fscanf(fid, "%lf\n", &(pieces[6]));
-  ret = fscanf(fid, "special scale ");
+  if(ret != 1) { printf("Error (readin): Could not read special field 'sigma'.\n");       exit(1); }
+
+  (void)fscanf(fid, "special scale ");
   ret = fscanf(fid, "%lf\n", &(pieces[7]));
+  if(ret != 1) { printf("Error (readin): Could not read special field 'scale'.\n");       exit(1); }
 
   return 0;
 }
