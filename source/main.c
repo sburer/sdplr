@@ -232,48 +232,88 @@ size_t getstorage(size_t m, size_t numblk, size_t* blksz, char* blktype,
 size_t readin(size_t m, size_t numblk, size_t* blksz, char* blktype, double* R, double* lambda, size_t* maxranks, size_t* ranks, double* pieces, FILE* fid)
 {
   size_t h, k, base, ti1, ti2, ti3;
-  size_t ret;
+  int ret;  /* fscanf returns int, not size_t */
   char tc1;
 
   ret = fscanf(fid, "dual variable %zd\n", &ti1);
+  if(ret != 1) {
+    printf("Error (readin): Could not read dual variable count from solution file.\n");
+    exit(1);
+  }
 
   if(ti1 != m) {
     printf("Error (readin): Input solution and problem file do not match.\n");
     exit(1);
   }
 
-  for(h = 0; h < m; h++) ret = fscanf(fid, "%lf\n", &(lambda[h]));
+  for(h = 0; h < m; h++) {
+    ret = fscanf(fid, "%lf\n", &(lambda[h]));
+    if(ret != 1) {
+      printf("Error (readin): Could not read dual variable %zu from solution file.\n", h);
+      exit(1);
+    }
+  }
 
   base = 0;
   for(k = 0; k < numblk; k++) {
 
-    ret = fscanf(fid, "primal variable %zd %c %zd %zd %zd\n", &ti1, &tc1, &ti2, &ti3, &(ranks[k])); ti1--;
+    ret = fscanf(fid, "primal variable %zd %c %zd %zd %zd\n", &ti1, &tc1, &ti2, &ti3, &(ranks[k]));
+    if(ret != 5) {
+      printf("Error (readin): Could not read primal variable header for block %zu.\n", k);
+      exit(1);
+    }
+    ti1--;
 
     if(ti1 != k || tc1 != blktype[k] || ti2 != blksz[k] || ti3 != maxranks[k]) {
       printf("Error (readin): Input solution and problem file do not match.\n");
       exit(1);
     }
 
-    for(h = 0; h < blksz[k]*ranks[k]; h++) ret = fscanf(fid, "%lf\n", &(R[base + h]));
+    for(h = 0; h < blksz[k]*ranks[k]; h++) {
+      ret = fscanf(fid, "%lf\n", &(R[base + h]));
+      if(ret != 1) {
+        printf("Error (readin): Could not read R[%zu] for block %zu from solution file.\n", h, k);
+        exit(1);
+      }
+    }
     base += blksz[k]*ranks[k];
   }
 
-  ret = fscanf(fid, "special majiter ");
+  /* For label-only formats (no conversion specifiers), fscanf always returns 0
+   * on success; it cannot signal a literal mismatch via return value.  We cast
+   * those calls to void and rely on the subsequent value read failing (ret != 1)
+   * to catch a corrupted or mismatched solution file. */
+  (void)fscanf(fid, "special majiter ");
   ret = fscanf(fid, "%lf\n", &(pieces[0]));
-  ret = fscanf(fid, "special iter ");
+  if(ret != 1) { printf("Error (readin): Could not read special field 'majiter'.\n");     exit(1); }
+
+  (void)fscanf(fid, "special iter ");
   ret = fscanf(fid, "%lf\n", &(pieces[1]));
-  ret = fscanf(fid, "special lambdaupdate ");
+  if(ret != 1) { printf("Error (readin): Could not read special field 'iter'.\n");        exit(1); }
+
+  (void)fscanf(fid, "special lambdaupdate ");
   ret = fscanf(fid, "%lf\n", &(pieces[2]));
-  ret = fscanf(fid, "special CG ");
+  if(ret != 1) { printf("Error (readin): Could not read special field 'lambdaupdate'.\n"); exit(1); }
+
+  (void)fscanf(fid, "special CG ");
   ret = fscanf(fid, "%lf\n", &(pieces[3]));
-  ret = fscanf(fid, "special curr_CG ");
+  if(ret != 1) { printf("Error (readin): Could not read special field 'CG'.\n");          exit(1); }
+
+  (void)fscanf(fid, "special curr_CG ");
   ret = fscanf(fid, "%lf\n", &(pieces[4]));
-  ret = fscanf(fid, "special totaltime ");
+  if(ret != 1) { printf("Error (readin): Could not read special field 'curr_CG'.\n");     exit(1); }
+
+  (void)fscanf(fid, "special totaltime ");
   ret = fscanf(fid, "%lf\n", &(pieces[5]));
-  ret = fscanf(fid, "special sigma ");
+  if(ret != 1) { printf("Error (readin): Could not read special field 'totaltime'.\n");   exit(1); }
+
+  (void)fscanf(fid, "special sigma ");
   ret = fscanf(fid, "%lf\n", &(pieces[6]));
-  ret = fscanf(fid, "special scale ");
+  if(ret != 1) { printf("Error (readin): Could not read special field 'sigma'.\n");       exit(1); }
+
+  (void)fscanf(fid, "special scale ");
   ret = fscanf(fid, "%lf\n", &(pieces[7]));
+  if(ret != 1) { printf("Error (readin): Could not read special field 'scale'.\n");       exit(1); }
 
   return 0;
 }
