@@ -10,7 +10,14 @@
 // #define size_t int
 // #endif
 
-#define MYCALLOC(VAR,TYPE,SIZE) VAR = (TYPE*)calloc(SIZE, sizeof(TYPE))
+#define MYCALLOC(VAR,TYPE,SIZE) do { \
+    (VAR) = (TYPE*)calloc((SIZE), sizeof(TYPE)); \
+    if ((VAR) == NULL) { \
+        printf("Error: memory allocation of %zu bytes failed (%s:%d)\n", \
+               (size_t)(SIZE) * sizeof(TYPE), __FILE__, __LINE__); \
+        exit(1); \
+    } \
+} while(0)
 #define MYFREE(VAR) free(VAR);
 
 #define mymaxint(A, B) ((A) > (B) ? (A) : (B))
