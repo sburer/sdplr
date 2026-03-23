@@ -1,14 +1,7 @@
 // global variables
 
-//! \brief Global variable that keeps track of SDP block. Only necessary
-//! if \ref __ARPACK is defined.
-//!
-//! Arpack requires a function posize_ter to complete its MAT*vec
-//! operation, but as far as I know, there's no good way to pass
-//! parameters size_to that function (something I would definitely like to
-//! do). So my work-around is to make global copies of those parameters
-//! and access them directly inside Arpack. See \ref my_arpack and \ref
-//! simple_Stimesvec_block.
+//! \brief Global variable that keeps track of the current SDP block during
+//! eigenvalue computation in simple_Stimesvec_block (eigen.c).
 
 // #ifndef __MEX
 // #define size_t int
@@ -16,11 +9,8 @@
 
 size_t           global_blk;
 
-//! \brief Global variable that is a simple copy of \ref problemdata
-//! structure used elsewhere. Only necessary if \ref __ARPACK is
-//! defined.
-//!
-//! See \ref global_blk for full explanation.
+//! \brief Global pointer to the problemdata structure, used by
+//! simple_Stimesvec_block (eigen.c) during eigenvalue computation.
 
 problemdata  *global_data;
 

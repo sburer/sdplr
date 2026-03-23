@@ -23,18 +23,33 @@ On Ubuntu/Debian: `sudo apt-get install gcc liblapack-dev libblas-dev gfortran`
 
 ### Configuration
 
-Edit `Makefile.inc` (or use the platform-specific variants) to set paths and compiler flags:
+Run `./configure.sh` to auto-detect LAPACK/BLAS and generate `Makefile.inc` (Linux and macOS). For Windows/MinGW, copy `Makefile.inc.mingw` and edit manually.
 
-```
-LAPACK_LIB_DIR=   # directory containing liblapack (blank = system default)
+`Makefile.inc` has three sections:
+
+```makefile
+LAPACK_LIB_DIR=   # directory containing liblapack; blank = system default (-L omitted)
 LAPACK_LIB= -llapack
 BLAS_LIB_DIR=
 BLAS_LIB= -lblas
 CC       = gcc
 CFLAGS   = -O3
+LIB_DIRS = -L$(LAPACK_LIB_DIR) -L$(BLAS_LIB_DIR)   # extra -L flags
+LIBS     = -lgsl $(LAPACK_LIB) $(BLAS_LIB) -lgfortran -lm
 ```
 
-Run `./configure.sh` to auto-detect LAPACK/BLAS and generate `Makefile.inc` (Linux and macOS). For Windows/MinGW, use `Makefile.inc.mingw` as a manual template.
+Key points:
+- `LIB_DIRS` adds `-L` search paths; the repo's own `lib/` directory is appended automatically by `source/Makefile`.
+- `LIBS` specifies libraries in link order — order matters for static linkers. `-lgsl` must precede LAPACK/BLAS; `-lgfortran` (Fortran runtime required by LAPACK) and `-lm` go last.
+- A typical Ubuntu line: `LIBS = -lgsl -llapack -lblas -lgfortran -lm`
+- On macOS with Accelerate: `LIBS = -lgsl -framework Accelerate`
+
+### Windows (MinGW) prerequisites
+
+- MinGW base system including `mingw32-make`; add MinGW's `bin/` to the Windows PATH
+- MinGW gcc + gfortran toolchain (latest release recommended)
+- LAPACK and BLAS compiled for MinGW (`.a` static libraries)
+- Edit `Makefile.inc.mingw` to set `LAPACK_LIB_DIR` and `BLAS_LIB_DIR` to where those libraries live, then run `mingw32-make mingw`
 
 ### Make Commands
 
@@ -59,9 +74,12 @@ Build the MEX file from within MATLAB:
 
 ```matlab
 run mexinstall.m   % sets up paths and compiles mexsdplr
+help sdplr         % full calling convention
 ```
 
 This produces `mexsdplr.mex*` which is called by `sdplr.m`.
+
+**Windows note:** the top two lines of `mexinstall.m` set paths to MATLAB's own LAPACK/BLAS `.lib` files; adjust them for the actual location on your system.
 
 ---
 
@@ -82,7 +100,8 @@ This produces `mexsdplr.mex*` which is called by `sdplr.m`.
 # Warm start and save solution
 ./sdplr <input_file> <params_file> <soln_in> <soln_out>
 
-# Generate a default params file
+# Generate a default params file (interactive wizard)
+# Type 'i' at any parameter prompt for a detailed explanation
 ./sdplr gen_params
 ```
 
@@ -93,10 +112,8 @@ Controlled by the `Input type` parameter in `sdplr.params`:
 - `2` — SDPLR native format
 - `1000` — raw binary format
 
-Example input files are in `data/`:
-- `data/vibra1.dat-s` — SDPA format problem
-- `data/gpp100.dat-s.sdplr` — SDPLR format problem
-- `data/vibra1.dat-s.out` — expected output for reference
+Example input files are in `data/` and `tests/data/`:
+- `data/vibra1.dat-s` — SDPA format problem (also used by `make test-fast`)
 
 ### MATLAB Usage
 
@@ -192,8 +209,103 @@ The pattern is well-established and pervasive. Do not attempt to normalize to pu
 
 **MEX build:** The same `sdplrlib.c` core is compiled for both the standalone binary and the MEX interface. The `__MEX` preprocessor flag enables MATLAB-specific I/O in `main.c` and `sdplrlib.c`.
 
-**Random seed:** The initial point `R` is set using `srand(925)` (fixed seed). To use a random seed instead, uncomment the `srand((unsigned)time(NULL))` line and set `#define RANDOM 1` in `main.c`.
+**Random seed:** The initial point `R` is set using `srand(925)` (fixed seed). To use a random seed instead, set `#define RANDOM 1` in `source/macros.h` (the canonical location; the code then calls `srand((unsigned)time(NULL))` instead).
 
 **Output format:** The solution file written by `writeout()` (and read by `readin()`) stores dual variable `lambda` and the low-rank factor `R` per block, plus algorithmic metadata (`majiter`, `iter`, `sigma`, `scale`, etc.).
 
 **License:** GPL v2 (see `COPYING`). The bundled GSL 1.5 subset is also GPL v2.
+
+---
+
+## SDPLR Format Specification
+
+The SDPLR format is an extension of SDPA sparse format that additionally supports **low-rank data matrices**. Use it when constraint matrices have a known factorization A = BDBᵀ (B dense, D diagonal), which avoids storing large sparse matrices explicitly.
+
+Select with `Input type = 2` in the params file.
+
+### File structure
+
+```
+m                          (number of constraints / dual variables)
+k                          (number of blocks)
+n_1 n_2 ... n_k            (block sizes; negative n_j = diagonal/LP block of size |n_j|)
+b_1 b_2 ... b_m            (RHS vector, all on one line)
+trace_bound                (currently ignored; reserved for combinatorial dual bounds)
+<(m+1)*k data sections>    (objective matrix first, then constraint matrices in order;
+                            within each matrix, blocks listed in order)
+```
+
+### Sparse block section
+
+Header line: `mat_index  blk_index  s  nnz`
+
+- `mat_index = 0` for objective C; `mat_index = i` for constraint Aᵢ
+- `s` indicates sparse storage
+- `nnz` = number of nonzero entries in the upper triangle
+
+Followed by `nnz` lines, each: `row  col  value`  (row ≤ col; upper triangle only)
+
+### Low-rank block section
+
+Header line: `mat_index  blk_index  l  r`
+
+- `l` indicates low-rank storage
+- `r` = rank of this block (the block is stored as BDBᵀ, B ∈ ℝⁿʲ×ʳ, D ∈ ℝʳ×ʳ diagonal)
+
+Followed by:
+- `r` lines containing the diagonal entries of D (d₁, d₂, …, dᵣ)
+- `nⱼ * r` lines containing the entries of B in **column-major** order (B is stored dense)
+
+### Sign convention (same as SDPA)
+
+SDPLR negates the objective matrix (entry 0) on read. The internal problem is
+**min −C•X** s.t. Aᵢ•X = bᵢ, X ⪰ 0. To minimise f(X) = C•X, write **−C** as entry 0.
+
+### Worked example: Lovász theta for the 5-cycle
+
+The Lovász theta number ϑ(C₅) = √5 is computed by:
+
+```
+min   −J•X          (J = all-ones matrix; negated in file as +J)
+s.t.  Xᵢᵢ = 1       for i = 1..5
+      Xᵢⱼ = 0       for each edge (i,j) of C₅
+      X ⪰ 0
+```
+
+In SDPLR format (m=6 constraints, 1 block of size 5):
+
+```
+6
+1
+5
+0.0 0.0 0.0 0.0 0.0 1.0
+-1.0
+0 1 l 1
+-1.0
+1.0
+1.0
+1.0
+1.0
+1.0
+1 1 s 1
+1 1 1.0
+2 1 s 1
+2 2 1.0
+3 1 s 1
+3 3 1.0
+4 1 s 1
+4 4 1.0
+5 1 s 1
+5 5 1.0
+6 1 s 5
+1 1 1.0
+2 2 1.0
+3 3 1.0
+4 4 1.0
+5 5 1.0
+```
+
+The objective block (entry 0) uses low-rank format: B = ones(5,1), D = [−1], giving
+BDBᵀ = −J. SDPLR negates this on read, so C_internal = +J, and min −J•X over X with
+diagonal 1 gives the theta number. Constraints 1–5 enforce Xᵢᵢ = 1 (sparse, one entry
+each); constraint 6 enforces the five edge zeros using a 5×5 diagonal identity block.

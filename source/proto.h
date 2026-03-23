@@ -12,7 +12,6 @@ double C_normdatamat(problemdata *data);
 double normdatamat(problemdata *data, size_t matnum);
 size_t essential_calcs(problemdata *data, double *R, double normC, double normb, double *val, double *rho_c_val, double *rho_f_val);
 /* eigen.c */
-size_t my_arpack(size_t (*matvec)(double *, double *), size_t n, size_t nev, size_t ncv, char *which, size_t maxitr, size_t printlevel, double *evals, double *evecs, size_t *nconv, size_t *nummatvec);
 size_t simple_Stimesvec_block(double *out, double *in);
 int Smineval(problemdata *d, double *eval);
 int Sblockmineval(problemdata *d, double *blkevals);

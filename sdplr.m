@@ -1,8 +1,7 @@
 %
 %  [x,y,info,r] = sdplr(A,b,c,K,pars,lrA,x0,y0,info0,r0)
 %
-%  SDPLR 1.03-beta   http://dollar.biz.uiowa.edu/~sburer/software/SDPLR
-%                    Email and bug reports to: samuel-burer@uiowa.edu
+%  SDPLR 1.03-beta   https://github.com/sburer/sdplr
 %
 %  > x = sdplr(A,b,c,K)
 %
@@ -156,8 +155,7 @@
 %
 %  ------------------------------------------------------------------------
 %
-%  SDPLR 1.03-beta   http://dollar.biz.uiowa.edu/~sburer/software/SDPLR
-%                    Email and bug reports to: samuel-burer@uiowa.edu
+%  SDPLR 1.03-beta   https://github.com/sburer/sdplr
 function [varargout] = sdplr(varargin);
 
 % If initial information has been given...
