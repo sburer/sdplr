@@ -146,6 +146,10 @@ signed main(signed argc, char *argv[])
 //    writedata_sdpa("temp.dat-s", m, numblk, blksz, blktype, b, CAent, CArow, CAcol, CAinfo_entptr, CAinfo_type);
 //   exit(0);
   
+  // R and lambda are allocated 0-based here but passed as R-1 and lambda-1
+  // so that sdplrlib and all internal routines access them with 1-based
+  // indices ([1..nr] and [1..m] respectively).  See INDEXING CONVENTION
+  // comment in macros.h for the full explanation.
   sdplrlib(m, numblk, blksz, blktype, b, CAent, CArow, CAcol,
            CAinfo_entptr, CAinfo_type,
            numbfgsvecs, rho_f, rho_c, sigmafac, rankreduce, gaptol,

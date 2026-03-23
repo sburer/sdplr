@@ -26,6 +26,12 @@ size_t copystructures(problemdata* data, size_t m, size_t numblk, size_t* blksz,
 
   data->m = m;
   data->numblk = numblk;
+  // Pointer-decrement to establish the internal 1-based indexing convention:
+  // callers allocate blksz/blktype/b as 0-based arrays of length numblk/m,
+  // but all internal code accesses them as blksz[1..numblk], blktype[1..numblk],
+  // b[1..m].  Storing the decremented pointer here means index [k] in
+  // internal code hits the correct 0-based element [k-1] of the original array.
+  // See INDEXING CONVENTION comment in macros.h for the full explanation.
   data->blksz = blksz-1;
   data->blktype = blktype-1;
   data->b = b-1;

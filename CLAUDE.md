@@ -158,6 +158,30 @@ Key parameters (generate defaults with `./sdplr gen_params`):
 
 ---
 
+## Indexing Convention (Two-Zone Model)
+
+The codebase uses a deliberate **two-zone indexing model** to interface cleanly with Fortran BLAS/LAPACK routines:
+
+**External zone (main.c, mexsdplr.c):** Arrays are allocated with standard 0-based C indexing (`MYCALLOC(R, double, nr)`) and initialized with 0-based loops (`for h = 0; h < nr`).
+
+**Boundary:** On entry to `sdplrlib`, pointers are decremented by 1:
+```c
+sdplrlib(..., R-1, lambda-1, ...);      // main.c
+data->blksz   = blksz-1;               // copystructures.c
+data->blktype = blktype-1;
+data->b       = b-1;
+```
+
+**Internal zone (sdplrlib and everything it calls):** All arrays are accessed with 1-based indices. Block loops run `k = 1..numblk`, vector loops run `i = 1..m`, and so on. The `EASY*` macros (`EASYDAXPY`, `EASYDDOT`, etc.) reinforce this by adding `+1` to every pointer before calling BLAS — callers must pass the base pointer (not base+1) and allocate `size+1` elements so that index [0] is unused padding.
+
+**Exception:** The `CA*` arrays (`CAent`, `CArow`, `CAcol`, `CAinfo_entptr`, etc.) are genuinely 0-based throughout and are never pointer-decremented. The `DATABLOCKIND` macro computes 0-based flat indices into these arrays.
+
+**`vio` is a hybrid:** `vio[0]` holds the objective contribution directly (scalar access), while `vio[1..m]` hold constraint violations and are operated on via `EASY*` macros.
+
+The pattern is well-established and pervasive. Do not attempt to normalize to pure 0-based indexing without first building a comprehensive test suite — a single missed conversion produces silent wrong answers in the numerics.
+
+---
+
 ## Developer Notes
 
 **Algorithm overview:** The outer loop is an augmented Lagrangian method that penalizes constraint violations while updating dual variables (`lambda`). The penalty parameter `sigma` grows by `sigmafac` when progress stalls. Each inner iteration minimizes the augmented Lagrangian over the low-rank factor `R` using L-BFGS with backtracking line search.

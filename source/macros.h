@@ -28,6 +28,19 @@
 #define SMATIND(I,J,DIM) (J-1)*DIM + I
 #define LMATIND(I,J,DIM) DIM*(DIM+1)/2 -(DIM-J+1)*(DIM-J+2)/2 + I - J + 1
 
+// INDEXING CONVENTION (internal / 1-based zone):
+//   All solver-internal arrays (R, lambda, b, blksz, blktype, X, S, y, vio,
+//   rank, maxrank, G, D, lbfgs vecs, …) are accessed with 1-based indices.
+//   Entry points (main.c, mexsdplr.c) allocate these arrays 0-based, then
+//   pass pointer-decremented versions (e.g. R-1, lambda-1, blksz-1) so that
+//   index [1] lands on the first element.  Index [0] is always unused padding.
+//
+//   Consequence for EASY* macros: each macro adds +1 to every pointer before
+//   calling the underlying BLAS routine, so callers must pass the base pointer
+//   (not base+1) and must have allocated at least DIM+1 elements.
+//
+//   CA* data arrays (CAent, CArow, CAcol, CAinfo_*) are the exception: they
+//   use genuine 0-based indexing throughout and are never pointer-decremented.
 #define EASYDAXPY(DIM,SCAL,X,Y)   mydaxpy(DIM,SCAL,X+1,1,Y+1,1)
 #define EASYDCOPY(DIM,X,Y)        mydcopy(DIM,X+1,1,Y+1,1)
 #define EASYDDOT(DIM,X,Y)         myddot(DIM,X+1,1,Y+1,1)
