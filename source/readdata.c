@@ -916,7 +916,6 @@ size_t writedata_sdplr(char* datafilename, size_t m, size_t numblk, size_t* blks
             for(j = 0; j < sz; j++) if(fabs(w[j])/maxeval > DBL_EPSILON) rank++;
             printf("(h,k) = (%zu,%zu) : rank %zu\n", h, k, rank);
           }
-//           else printf("h = %zu : eval computation bad\n", h);
 
         }
 

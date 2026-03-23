@@ -21,7 +21,6 @@ size_t printparams(problemdata* data)
 {
   printf("rho_f        = %.1e\n", data->rho_f);
   printf("rho_c        = %.1e\n", data->rho_c);
-//   printf("method       = %d\n", data->method);
   printf("sigmafac     = %.1f\n", data->sigmafac);
   printf("rankreduce   = %zu\n", data->rankreduce);
   printf("timelim      = %zu\n", data->timelim);
@@ -29,13 +28,7 @@ size_t printparams(problemdata* data)
   printf("dthresh_dens = %.2f\n", data->dthresh_dens);
 
   printf("numbfgsvecs  = %zu\n", data->numbfgsvecs);
-//   printf("mixedtol     = %.1e\n", data->mixedtol);
-//   printf("doAR         = %d\n", data->doAR);
   printf("rankredtol   = %.16e\n", data->rankredtol);
-
-//   printf("pc           = %d\n", data->pc);
-//   printf("gdens        = %.1f\n", data->gdens);
-//   printf("reorder      = %d\n", data->reorder);
   printf("gaptol       = %.1e\n", data->gaptol);
   printf("checkbd      = %zu\n", data->checkbd);
   printf("typebd       = %zu\n", data->typebd);
@@ -57,8 +50,6 @@ size_t print_dimacs_errors(problemdata* data, double* R)
 
   d2 = d3 = 0.0;
 
-//   printf("DIMACS error measures: ");
-
   // This routine does not work if C is a low-rank
   // data matrix. (Have I fixed this?)
 
@@ -72,21 +63,11 @@ size_t print_dimacs_errors(problemdata* data, double* R)
 
   d1 = EASYDNRM2(data->m, data->vio)/(1.0 + bnorm);
 
-#ifdef __ARPACK
-  // Begin: Make sure S is based on y only
-  for(k = 1; k <= data->m; k++)
-    data->y[k] = -data->lambda[k];
-  AToper(data, data->y, data->S, 1);
-  // End: Make sure S is based on y only
-  problem = Smineval(data,&tempval);
-  d4 = mymax(0.0, -tempval/(1.0 + Cnorm));
-#else
   problem = Smineval(data,&tempval);
   if(fabs(tempval + 1.0e10) > DBL_EPSILON) {
     d4 = mymax(0.0, -tempval/(1.0 + Cnorm));
   }
   else { d4 = -1.0e10; }
-#endif
 
   d5 = (CdotRRt - bty)/(1.0 + fabs(CdotRRt) + fabs(bty));
 

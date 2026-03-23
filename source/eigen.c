@@ -8,121 +8,6 @@
 /* #define exit(er) mexWarnMsgTxt("SDPLR Error\n"); return mxGetNaN(); */
 /* #endif */
 
-#ifdef __ARPACK
-
-size_t my_arpack(size_t (*matvec)(double*, double*), size_t n, size_t nev, size_t ncv, char* which, size_t maxitr, size_t printlevel, double* evals, double* evecs, size_t* nconv, size_t* nummatvec)
-{
-  // Variables taken from ARPACK examples
-  double *v, *workl, *workd, *d, *resid;
-  size_t *select, iparam[11], ipntr[11];
-  char bmat[2], all[4];
-  size_t ldv, ido, lworkl, info, ierr;
-  size_t mode, ishfts, rvec;
-  double tol, sigma;
-  double zero;
-
-  size_t i;
-  double minevalest;
-
-  // Extra variables
-  size_t tempsize_t;
-
-  // Initialize counter for number of matvec operations
-  *nummatvec = 0;
-
-  // Setup different parameters
-  ldv = n;
-  zero = 0.0;
-  strcpy(bmat, "I\0");
-  lworkl = ncv*(ncv+8);
-  //tol = zero;
-  tol = (double)1.0/n;
-  info = 0;
-  ido = 0;
-  ishfts = 1;
-  mode = 1;
-  iparam[1-1] = ishfts;
-  iparam[3-1] = maxitr;
-  iparam[7-1] = mode;
-  rvec = 1;
-  strcpy(all, "All\0");
-
-  // Allocate memory
-  v = (double*)calloc(ldv*ncv, sizeof(double));
-  workl = (double*)calloc(ncv*(ncv+8), sizeof(double));
-  workd = (double*)calloc(3*n, sizeof(double));
-  d = (double*)calloc(ncv*2, sizeof(double));
-  resid = (double*)calloc(n, sizeof(double));
-  select = (size_t*)calloc(ncv, sizeof(size_t));
-
-  // Do ARPACK loop
-
-  do {
-
-    dsaupd_(&ido, bmat, &n, which, &nev, &tol, resid, &ncv, v, &ldv, iparam, ipntr, workd, workl, &lworkl, &info);
-
-    if(ido == -1 || ido == 1) {
-
-      // This line assumes matvec numbers from 0 (not 1)
-      matvec(workd + ipntr[2-1] - 1, workd + ipntr[1-1] - 1);
-      *nummatvec = *nummatvec + 1;
-
-    }
-    else if(info < 0) {
-
-      if(printlevel > 0) printf("ARPACK error (info = %d).\n", info);
-      goto END_ROUTINE;
-
-    }
-
-  } while(ido != 99);
-
-  // Post process
-
-  dseupd_(&rvec, all, select, d, v, &ldv, &sigma, bmat, &n, which, &nev, &tol, resid, &ncv, v, &ldv, iparam, ipntr, workd, workl, &lworkl, &ierr);
-
-  if(ierr != 0) {
-    if(printlevel > 0) printf("ARPACK error (ierr = %d).\n", ierr);
-    info = ierr;
-    goto END_ROUTINE;
-  }
-
-  *nconv = iparam[5-1];
-
-  if(printlevel > 0 && *nconv < nev) {
-    printf("Warning: %d out of %d evals converged.", *nconv, nev);
-    if(nev == 1) printf(" Best estimate returned.\n");
-    else printf("\n");
-  }
-
-  // Save eigen pairs in user's memory (even unreliable ones)
-  mydcopy(nev, d, 1, evals, 1);
-  tempsize_t = nev*n;
-  mydcopy(tempsize_t, v, 1, evecs, 1);
-
-  if(nev == 1 && *nconv == 0) {
-    minevalest = 1.0e10;
-    for(i = 1; i <= ncv; i++)
-      minevalest = mymin(minevalest, workl[ipntr[6-1]-2+i]);
-    evals[0] = minevalest;
-  }
-
-
-END_ROUTINE:
-
-  free(select);
-  free(resid);
-  free(d);
-  free(workd);
-  free(workl);
-  free(v);
-
-
-  if(*nconv < nev) return -1;
-  return info;
-}
-
-#endif
 
 size_t simple_Stimesvec_block(double* out, double* in)
 {
@@ -199,24 +84,8 @@ int Sblockmineval(problemdata* d, double* blkevals)
 
     if(d->blktype[k] == SDPBLK && d->XS_blksto[k] == SPARSE) {
       
-#ifdef __ARPACK
-
-      global_blk = k;
-      n = d->blksz[k];
-      ncv = mymin(2*mymax(2*nev,20),n); // This is Matlab's rule (times two).
-      MYCALLOC(evec, double, n+1);
-
-      // When finished, evals[1] gives first eigenvalue
-      // and evecs[1] is start of eigenvectors
-      ret = my_arpack(simple_Stimesvec_block, n, nev, ncv, which, maxitr, printlevel, &eval, evec+1, &nconv, &nummatvec);
-      MYFREE(evec);
-      if(ret == -1) problem = -1;
-
-#else
-
+      /* Sparse SDP blocks: return sentinel value (ARPACK support removed) */
       eval = -1.0e10;
-
-#endif
 
       blkevals[++ct] = eval;
 

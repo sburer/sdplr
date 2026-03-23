@@ -91,11 +91,7 @@ size_t dorankreduce(problemdata* d, double* R)
         //info = 0;
         //for(i = p; i >= 1; i--) {
         //  if(save[k][i] == 1) info = 1;
-        //  save[k][i] = info;
-        //}
         printf("Error (rankreduce.c): Unexpected results from QR factorization.\n");
-        //for(i = 1; i <= p; i++)
-        //  printf("%e\n", U[base + (i-1)*p + i]);
         exit(1);
       }
 
@@ -166,8 +162,7 @@ size_t dorankreduce(problemdata* d, double* R)
 
           EASYDCOPY(d->blksz[k]*d->rank[k], U + base2, R + base1);
 
-          /* if(RANDOM) srand( (unsigned)time( NULL ) ); */ /* SAM 2023-10-04 */
-          if(RANDOM) srand(925);
+          if(RANDOM) srand((unsigned)time(NULL));
           else       srand(925);
 
           tv = 0.0;
@@ -192,7 +187,6 @@ size_t dorankreduce(problemdata* d, double* R)
 
       }
         
-      //printf("  <rr> blk %d  ( %d / %d / %d )\n", k, newrank, d->rank[k], d->maxrank[k]);
 
     }
     else if(d->blktype[k] == 'd') {

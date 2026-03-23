@@ -35,9 +35,10 @@
 #define EASYDSCAL(DIM,SCAL,X)     mydscal(DIM,SCAL,X+1,1)
 #define ZEROVEC(X,DIM)            mydscal(DIM,0.0,X+1,1)
 
-// Some parameters for testing purposes
-#define RANDOM 0 // default 1 (also in main.c (???))
-#define SCALE_OBJ 0
+// RANDOM: controls srand seed for R initialisation.
+//   0 = fixed seed 925 (reproducible; default)
+//   1 = time-based seed (non-deterministic)
+#define RANDOM 0
 
 #define SDPBLK  's'
 #define DIAGBLK 'd'

@@ -3,8 +3,6 @@
 #include "mex.h"
 #endif
 
-// Parameters and macros just for this file
-#define RANDOM 0
 // #define DATABLOCKIND(DATA,BLOCK,NUMBLOCK) ((DATA+1)-1)*NUMBLOCK + BLOCK - 1
 
 signed main(signed argc, char *argv[])
@@ -129,8 +127,7 @@ signed main(signed argc, char *argv[])
     fclose(fid);
   }
   else {
-    /* if(RANDOM) srand( (unsigned)time( NULL ) ); */ /* SAM 2023-10-04 */
-    if(RANDOM) srand(925);
+    if(RANDOM) srand((unsigned)time(NULL));
     else       srand(925);
     for(h = 0; h < nr; h++) {
       R[h]  = (double)rand()/RAND_MAX;

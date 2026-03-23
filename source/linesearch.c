@@ -64,7 +64,6 @@ double linesearch(problemdata* data, double* R, double* D, double max, double* f
     gsl_poly_solve_quadratic(cubic[2], cubic[1], cubic[0], roots, roots+1);
   else
     roots[0] = -cubic[0] / cubic[1];
-  //printf("%f    %f    %f\n", roots[0], roots[1], roots[2]);
 
   f0 = quartic[0];
 

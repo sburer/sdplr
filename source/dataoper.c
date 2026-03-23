@@ -96,10 +96,6 @@ size_t Aoper(problemdata* d, double* U, double* V, double* UVt, size_t same, siz
       for(j = 1; j <= k-1; j++)
         base += d->blksz[j]*d->rank[j];
 
-/*      printf("k = %d\n", k);
-      printf("i = %d\n", i);
-      printf("rk = %d\n", rk);
-      printf("base = %d\n", base); */
 
 
       if(i > 0 || obj) {
@@ -134,9 +130,6 @@ size_t Aoper(problemdata* d, double* U, double* V, double* UVt, size_t same, siz
         for(j = 1; j <= A->lr->ncol; j++)
           sum += A->lr->d[j]*EASYDDOT(rk, global_UtB + (j-1)*rk, global_VtB + (j-1)*rk);
         results[i] += sum;
-/*        printf("sum = %f\n", sum);
-
-        exit(0); */
 
       }
     }
