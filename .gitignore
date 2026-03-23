@@ -1,0 +1,19 @@
+# Build artifacts
+*.o
+*.a
+sdplr
+sdplr.exe
+mexsdplr.*
+lib/libgsl.a
+
+# Editor temp files
+*~
+*.swp
+*.swo
+.DS_Store
+\#*\#
+.#*
+
+# IDE directories
+.vscode/
+.idea/
