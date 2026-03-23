@@ -1,5 +1,3 @@
-// Original readdata routines are in orig_readdata.c
-
 #include "myinclude.h"
 #ifdef __MEX
 #include "mex.h"

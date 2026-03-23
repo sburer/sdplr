@@ -446,9 +446,8 @@ size_t generate_params_info(size_t num)
       printf("\n");
       printf("This parameter specifies which format your datafile is in, either\n");
       printf("SDPA or SDPLR format. SDPA is the most common format.\n\n");
-      printf("Information on the SDPA format can be found at\n");
-      printf("http://www.nmt.edu/~sdplib/FORMAT. Information on the SDPLR format\n");
-      printf("can be found in the SDPLR User's Guide.\n");
+      printf("Information on the SDPA format can be found in the README.\n");
+      printf("Information on the SDPLR format can be found in CLAUDE.md.\n");
       printf("\n");
       break;
     }
