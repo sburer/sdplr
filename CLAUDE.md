@@ -34,7 +34,7 @@ CC       = gcc
 CFLAGS   = -O3
 ```
 
-Platform-specific templates: `Makefile.inc.linux`, `Makefile.inc.mac`, `Makefile.inc.mingw`. Copy the appropriate one to `Makefile.inc` before building.
+Run `./configure.sh` to auto-detect LAPACK/BLAS and generate `Makefile.inc` (Linux and macOS). For Windows/MinGW, use `Makefile.inc.mingw` as a manual template.
 
 ### Make Commands
 

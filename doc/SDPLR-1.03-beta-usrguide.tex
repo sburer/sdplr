@@ -178,8 +178,10 @@ options in {\sl Makefile.inc\/} (see Step 2).
 
 \subsubsection*{Step 2}
 
-Tailor the file {\sl Makefile.inc\/} to your system; {\sl
-Makefile.inc.linux\/} is provided as an example. There are three
+Tailor the file {\sl Makefile.inc\/} to your system. The easiest
+approach is to run {\tt ./configure.sh}, which auto-detects LAPACK and
+BLAS on Linux and macOS and writes {\sl Makefile.inc\/} for you.
+Alternatively, edit {\sl Makefile.inc\/} manually; there are three
 sections:
 
 \begin{itemize}
