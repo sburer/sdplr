@@ -500,7 +500,7 @@ size_t readdata_sdplr(char* datafilename, size_t* passed_m, size_t* passed_numbl
   char type;
   FILE *datafile;
 
-  int    m, numblk;
+  int    m, numblk, tmp_signed_size;
   size_t *blksz;
   size_t    ret;
   char   *blktype;
@@ -533,10 +533,12 @@ size_t readdata_sdplr(char* datafilename, size_t* passed_m, size_t* passed_numbl
 
   // Read block size and set blktype
   for(blk = 0; blk < numblk; blk++) {
-    ret = fscanf(datafile, "%zu", &(blksz[blk]));
-    if(blksz[blk] > 0) blktype[blk] = 's';
-    else if(blksz[blk] < 0) {
-      blksz[blk] *= -1;
+    ret = fscanf(datafile, "%zu", &tmp_signed_size);
+    if (tmp_signed_size > 0) {
+      blksz[blk] = tmp_signed_size;
+      blktype[blk] = 's';
+    } else if(tmp_signed_size < 0) {
+      blksz[blk] = -tmp_signed_size;
       blktype[blk] = 'd';
     }
     else { printf("Problem reading data. Block size 0!\n"); exit(1); }
@@ -639,8 +641,11 @@ size_t readdata_sdplr(char* datafilename, size_t* passed_m, size_t* passed_numbl
   ret = fscanf(datafile, "%u", &m);
   ret = fscanf(datafile, "%u", &numblk);
   for(blk = 0; blk < numblk; blk++) {
-    ret = fscanf(datafile, "%zu", &(blksz[blk])); 
-    if(blksz[blk] < 0) blksz[blk] *= -1;
+    ret = fscanf(datafile, "%d", &tmp_signed_size);
+    if(tmp_signed_size > 0)
+      blksz[blk] = tmp_signed_size;
+    else
+      blksz[blk] = -tmp_signed_size;
   }
   for(i = 0; i < m; i++) ret = fscanf(datafile, "%lf", &(b[i]));
   ret = fscanf(datafile, "%lf", &entry);
