@@ -494,7 +494,7 @@ size_t readdata_sdplr(char* datafilename, size_t* passed_m, size_t* passed_numbl
   // and no error checking is done at all.
 
   size_t i, j, k, pos1, pos2, num, blk, sz;
-  size_t *nnz;
+  int *nnz;
   size_t ct, specindex;
   double entry;
   char type;
@@ -555,7 +555,7 @@ size_t readdata_sdplr(char* datafilename, size_t* passed_m, size_t* passed_numbl
   ret = fscanf(datafile, "%lf", &entry);
 
   // Prepare for next step  
-  MYCALLOC(nnz, size_t, (m+1)*numblk);
+  MYCALLOC(nnz, int, (m+1)*numblk);
 
   // Determine how many nnz entries are in each (data matrix)-(block) pair
   // This needs work!
@@ -607,8 +607,8 @@ size_t readdata_sdplr(char* datafilename, size_t* passed_m, size_t* passed_numbl
       specindex = DATABLOCKIND(i,blk,numblk);
       CAinfo_entptr[specindex] = ct;
       CAinfo_rowcolptr[specindex] = ct;
-      if(nnz[specindex] > 0) ct += nnz[specindex]; // sparse matrix
-      else ct += -nnz[specindex]; // low-rank matrix
+      if (nnz[specindex] > 0) ct += nnz[specindex]; // sparse matrix
+      else ct -= nnz[specindex]; // low-rank matrix
 
       if(nnz[specindex] > 0) CAinfo_storage[specindex] = 's'; // sparse matrix (sparse)
       else CAinfo_storage[specindex] = 'd'; // low-rank matrix (dense)
